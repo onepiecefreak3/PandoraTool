@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+	<RootNamespace>Logic.Business.FileManagement</RootNamespace>
+	<AssemblyName>Logic.Business.FileManagement</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CrossCutting.Core.Contract\CrossCutting.Core.Contract.csproj" />
+    <ProjectReference Include="..\Logic.Business.FileManagement.Contract\Logic.Business.FileManagement.Contract.csproj" />
+    <ProjectReference Include="..\Logic.Domain.CodeAnalysis.Contract\Logic.Domain.CodeAnalysis.Contract.csproj" />
+    <ProjectReference Include="..\Logic.Domain.PandoraManagement.Contract\Logic.Domain.PandoraManagement.Contract.csproj" />
+  </ItemGroup>
+
+</Project>
