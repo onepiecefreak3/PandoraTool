@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk.Worker">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <AssemblyName>PandorasProcessor</AssemblyName>
-    <RootNamespace>PandorasProcessor</RootNamespace>
+    <AssemblyName>PandoraTool</AssemblyName>
+    <RootNamespace>PandoraTool</RootNamespace>
     <Version>1.0.0</Version>
   </PropertyGroup>
   <ItemGroup>
@@ -10,7 +10,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CrossCutting.Core.Contract\CrossCutting.Core.Contract.csproj" />
-    <ProjectReference Include="..\Mappings.PandorasProcessor\Mappings.PandorasProcessor.csproj" />
+    <ProjectReference Include="..\Mappings.PandoraTool\Mappings.PandoraTool.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Update="config.json">
