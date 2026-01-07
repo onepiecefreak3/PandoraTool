@@ -277,7 +277,7 @@ internal class PandoraScriptParser : IPandoraScriptParser
         if (IsParenthesizedExpression(buffer))
             return ParseParenthesizedExpression(buffer);
 
-        throw CreateException(buffer, "Invalid expression.", SyntaxTokenKind.StringLiteral, SyntaxTokenKind.DataLiteral, SyntaxTokenKind.NumericLiteral,
+        throw CreateException(buffer, "Invalid expression.", SyntaxTokenKind.StringLiteral, SyntaxTokenKind.NumericLiteral,
             SyntaxTokenKind.JumpLiteral, SyntaxTokenKind.VarsKeyword, SyntaxTokenKind.ParenOpen);
     }
 
@@ -315,7 +315,6 @@ internal class PandoraScriptParser : IPandoraScriptParser
     private bool IsLiteralExpression(IBuffer<PandoraSyntaxToken> buffer)
     {
         return HasTokenKind(buffer, SyntaxTokenKind.StringLiteral) ||
-               HasTokenKind(buffer, SyntaxTokenKind.DataLiteral) ||
                HasTokenKind(buffer, SyntaxTokenKind.JumpLiteral) ||
                HasTokenKind(buffer, SyntaxTokenKind.NumericLiteral);
     }
@@ -344,16 +343,13 @@ internal class PandoraScriptParser : IPandoraScriptParser
         if (HasTokenKind(buffer, SyntaxTokenKind.StringLiteral))
             return ParseStringLiteralExpression(buffer);
 
-        if (HasTokenKind(buffer, SyntaxTokenKind.DataLiteral))
-            return ParseDataLiteralExpression(buffer);
-
         if (HasTokenKind(buffer, SyntaxTokenKind.JumpLiteral))
             return ParseJumpLiteralExpression(buffer);
 
         if (HasTokenKind(buffer, SyntaxTokenKind.NumericLiteral))
             return ParseNumericLiteralExpression(buffer);
 
-        throw CreateException(buffer, "Unknown literal expression.", SyntaxTokenKind.StringLiteral, SyntaxTokenKind.DataLiteral);
+        throw CreateException(buffer, "Unknown literal expression.", SyntaxTokenKind.StringLiteral);
     }
 
     private VariableExpressionSyntax ParseVariableExpression(IBuffer<PandoraSyntaxToken> buffer)
@@ -369,13 +365,6 @@ internal class PandoraScriptParser : IPandoraScriptParser
     private LiteralExpressionSyntax ParseStringLiteralExpression(IBuffer<PandoraSyntaxToken> buffer)
     {
         SyntaxToken literal = ParseStringLiteralToken(buffer);
-
-        return new LiteralExpressionSyntax(literal);
-    }
-
-    private LiteralExpressionSyntax ParseDataLiteralExpression(IBuffer<PandoraSyntaxToken> buffer)
-    {
-        SyntaxToken literal = ParseDataLiteralToken(buffer);
 
         return new LiteralExpressionSyntax(literal);
     }
@@ -536,11 +525,6 @@ internal class PandoraScriptParser : IPandoraScriptParser
     private SyntaxToken ParseStringLiteralToken(IBuffer<PandoraSyntaxToken> buffer)
     {
         return CreateToken(buffer, SyntaxTokenKind.StringLiteral);
-    }
-
-    private SyntaxToken ParseDataLiteralToken(IBuffer<PandoraSyntaxToken> buffer)
-    {
-        return CreateToken(buffer, SyntaxTokenKind.DataLiteral);
     }
 
     private SyntaxToken ParseJumpLiteralToken(IBuffer<PandoraSyntaxToken> buffer)

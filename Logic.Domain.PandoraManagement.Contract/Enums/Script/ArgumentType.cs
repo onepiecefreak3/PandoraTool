@@ -2,7 +2,6 @@
 
 public enum ArgumentType
 {
-    Data,
     Byte,
     Int,
     Jump,

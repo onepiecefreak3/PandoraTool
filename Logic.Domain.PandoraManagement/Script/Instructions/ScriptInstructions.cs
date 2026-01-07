@@ -276,8 +276,8 @@
 [assembly: ScriptInstruction(540)]
 [assembly: ScriptInstruction(541, "1c")]
 [assembly: ScriptInstruction(542)]
-//[assembly: ScriptInstruction(543)] // Read byte
-//[assembly: ScriptInstruction(544)] // Read byte
+[assembly: ScriptInstruction(543)]
+[assembly: ScriptInstruction(544)]
 [assembly: ScriptInstruction(545)]
 [assembly: ScriptInstruction(546, "1c")]
 [assembly: ScriptInstruction(547, "1c")]
@@ -315,7 +315,7 @@
 [assembly: ScriptInstruction(579, "1c1j")] // Jumps unconditionally, stores position of next instruction on stack
 [assembly: ScriptInstruction(580, "1c1j1s")] // Jumps unconditionally, stores position of next instruction on stack
 [assembly: ScriptInstruction(581, "1c")]
-//[assembly: ScriptInstruction(582)]
+[assembly: ScriptInstruction(582, "1v1c")]
 [assembly: ScriptInstruction(583, "1c")]
 [assembly: ScriptInstruction(584, "1v1c")]
 [assembly: ScriptInstruction(585, "1c|1s")]
@@ -328,9 +328,9 @@
 [assembly: ScriptInstruction(592, "2v")]
 [assembly: ScriptInstruction(593, "1v1i")] // Set int to variable
 [assembly: ScriptInstruction(594, "1v*(2c)")]
-//[assembly: ScriptInstruction(768)] // Read byte
-//[assembly: ScriptInstruction(769)] // Read byte
-//[assembly: ScriptInstruction(770)] // Read byte
+[assembly: ScriptInstruction(768, isManual: true)]
+[assembly: ScriptInstruction(769, isManual: true)]
+[assembly: ScriptInstruction(770, isManual: true)]
 [assembly: ScriptInstruction(771)]
 [assembly: ScriptInstruction(772)]
 [assembly: ScriptInstruction(773)]

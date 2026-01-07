@@ -224,20 +224,6 @@ internal class PandoraCodeUnitConverter : IPandoraCodeUnitConverter
     {
         switch (literal.Literal.RawKind)
         {
-            case (int)SyntaxTokenKind.DataLiteral:
-                var dataString = literal.Literal.Text[1..^1];
-                var dataLength = dataString.Length * 6;
-
-                if (dataLength % 8 != 0)
-                    throw CreateException("Invalid data length.", literal.Location, SyntaxTokenKind.DataLiteral);
-
-                var data = new byte[dataLength / 8];
-                if (!Convert.TryFromBase64String(literal.Literal.Text[1..^1], data, out int writtenLength))
-                    throw CreateException("Invalid data argument.", literal.Location, SyntaxTokenKind.DataLiteral);
-
-                arguments.Add(new ScriptArgumentBytes { Data = data[..writtenLength] });
-                break;
-
             case (int)SyntaxTokenKind.StringLiteral:
                 arguments.Add(new ScriptArgumentString { Text = literal.Literal.Text[1..^1].Replace(@"\\", @"\") });
                 break;

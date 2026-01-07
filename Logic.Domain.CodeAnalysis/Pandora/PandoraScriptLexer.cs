@@ -115,9 +115,6 @@ internal class PandoraScriptLexer : ILexer<PandoraSyntaxToken>
             case '"':
                 return ReadStringLiteral();
 
-            case '\'':
-                return ReadDataLiteral();
-
             case '0':
             case '1':
             case '2':
@@ -275,35 +272,6 @@ internal class PandoraScriptLexer : ILexer<PandoraSyntaxToken>
 
         _sb.Append(ReadChar());
         return new PandoraSyntaxToken(SyntaxTokenKind.JumpLiteral, position, line, column, _sb.ToString());
-    }
-
-    private PandoraSyntaxToken ReadDataLiteral()
-    {
-        int position = Position;
-        int line = Line;
-        int column = Column;
-
-        _sb.Clear();
-
-        if (!IsPeekedChar('\''))
-            throw CreateException("Invalid data literal start.", "\'");
-
-        _sb.Append(ReadChar());
-
-        while (!IsPeekedChar('\''))
-        {
-            if (IsPeekedChar('\\'))
-                _sb.Append(ReadChar());
-
-            _sb.Append(ReadChar());
-        }
-
-        if (_buffer.IsEndOfInput)
-            throw CreateException("Invalid data literal end.", "\'");
-
-        _sb.Append(ReadChar());
-
-        return new PandoraSyntaxToken(SyntaxTokenKind.DataLiteral, position, line, column, _sb.ToString());
     }
 
     private PandoraSyntaxToken ReadNumericLiteral()

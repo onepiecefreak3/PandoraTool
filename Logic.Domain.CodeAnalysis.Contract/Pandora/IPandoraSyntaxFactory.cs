@@ -10,7 +10,6 @@ public interface IPandoraSyntaxFactory
     SyntaxToken Token(SyntaxTokenKind kind);
 
     SyntaxToken StringLiteral(string text);
-    SyntaxToken DataLiteral(string text);
     SyntaxToken NumberLiteral(int value);
     SyntaxToken JumpLiteral(string label);
     SyntaxToken Identifier(string text);

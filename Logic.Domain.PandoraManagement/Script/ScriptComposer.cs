@@ -1,5 +1,4 @@
 ﻿using Logic.Domain.PandoraManagement.Contract.DataClasses.Script;
-using Logic.Domain.PandoraManagement.Contract.Enums.Script;
 using Logic.Domain.PandoraManagement.Contract.Script;
 using Logic.Domain.PandoraManagement.InternalContract.Script.Instructions;
 using Logic.Domain.PandoraManagement.Script.Instructions;
@@ -20,31 +19,9 @@ internal class ScriptComposer(IScriptWriter writer) : IScriptComposer
             IScriptInstructionComposer? composer = ScriptInstructionComposerFactory.Instance.Get(instruction.Instruction);
 
             if (composer is null)
-            {
-                if (instruction.Arguments.Length < 1 || instruction.Arguments[0] is not ScriptArgumentBytes bytes)
-                    throw new InvalidOperationException($"Instruction {instruction.Instruction} requires a data argument at position 0.");
+                throw new InvalidOperationException($"Could not compose unknown instruction {instruction}.");
 
-                result.Add(new ScriptInstructionData
-                {
-                    Offset = offset,
-                    Instruction = instruction.Instruction,
-                    Arguments =
-                    [
-                        new ScriptArgumentData
-                        {
-                            Offset = offset + 4,
-                            Type = ArgumentType.Data,
-                            Data = bytes.Data
-                        }
-                    ]
-                });
-
-                offset += bytes.Data.Length + 4;
-            }
-            else
-            {
-                result.Add(composer.Compose(instruction, jumpLookup, ref offset));
-            }
+            result.Add(composer.Compose(instruction, jumpLookup, ref offset));
         }
 
         return writer.Write([.. result]);
@@ -63,16 +40,9 @@ internal class ScriptComposer(IScriptWriter writer) : IScriptComposer
             IScriptInstructionCalculator? calculator = ScriptInstructionCalculatorFactory.Instance.Get(instruction.Instruction);
 
             if (calculator is null)
-            {
-                if (instruction.Arguments.Length < 1 || instruction.Arguments[0] is not ScriptArgumentBytes bytes)
-                    throw new InvalidOperationException($"Instruction {instruction.Instruction} requires a data argument at position 0.");
+                throw new InvalidOperationException($"Could not compose unknown instruction {instruction}.");
 
-                offset += bytes.Data.Length + 4;
-            }
-            else
-            {
-                offset += calculator.CalculateLength(instruction);
-            }
+            offset += calculator.CalculateLength(instruction);
         }
 
         return result;

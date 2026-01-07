@@ -56,11 +56,6 @@ internal class PandoraSyntaxFactory : IPandoraSyntaxFactory
         return new($"\"{text.Replace("\"", "\\\"")}\"", (int)SyntaxTokenKind.StringLiteral);
     }
 
-    public SyntaxToken DataLiteral(string text)
-    {
-        return new($"'{text.Replace("'", "\\'")}'", (int)SyntaxTokenKind.StringLiteral);
-    }
-
     public SyntaxToken NumberLiteral(int value)
     {
         return new($"{value}", (int)SyntaxTokenKind.NumericLiteral);

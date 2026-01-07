@@ -33,7 +33,6 @@ public enum SyntaxTokenKind
     Trivia,
 
     StringLiteral,
-    DataLiteral,
     NumericLiteral,
     JumpLiteral,
 

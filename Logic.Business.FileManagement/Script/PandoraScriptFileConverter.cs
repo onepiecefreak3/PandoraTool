@@ -165,9 +165,6 @@ internal class PandoraScriptFileConverter(IPandoraSyntaxFactory syntaxFactory) :
             case ScriptArgumentExpression expression:
                 return CreateExpression(expression.Operations);
 
-            case ScriptArgumentBytes data:
-                return CreateDataLiteralExpression(data.Data);
-
             case ScriptArgumentString text:
                 return CreateStringLiteralExpression(text.Text);
 
@@ -406,11 +403,6 @@ internal class PandoraScriptFileConverter(IPandoraSyntaxFactory syntaxFactory) :
     private LiteralExpressionSyntax CreateStringLiteralExpression(string value)
     {
         return new LiteralExpressionSyntax(syntaxFactory.StringLiteral(value.Replace(@"\", @"\\")));
-    }
-
-    private LiteralExpressionSyntax CreateDataLiteralExpression(byte[] value)
-    {
-        return new LiteralExpressionSyntax(syntaxFactory.DataLiteral(Convert.ToBase64String(value)));
     }
 
     private LiteralExpressionSyntax CreateNumberLiteralExpression(int value)

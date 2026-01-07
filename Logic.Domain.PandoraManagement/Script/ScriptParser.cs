@@ -67,10 +67,6 @@ internal class ScriptParser(IScriptReader reader) : IScriptParser
             ScriptArgument argument;
             switch (argumentData.Type)
             {
-                case ArgumentType.Data:
-                    argument = new ScriptArgumentBytes { Data = argumentData.Data };
-                    break;
-
                 case ArgumentType.Byte:
                     argument = new ScriptArgumentInt { Value = argumentData.Data[0] };
                     break;
@@ -89,27 +85,8 @@ internal class ScriptParser(IScriptReader reader) : IScriptParser
                     break;
 
                 case ArgumentType.Value:
-                    var operations = CreateOperations(argumentData.Data);
-
-                    if (operations[^1].Operation is Operation.LoadInt)
-                    {
-                        argument = new ScriptArgumentInt { Value = operations[^1].Value };
-                        break;
-                    }
-
-                    argument = new ScriptArgumentExpression { Operations = operations };
-                    break;
-
                 case ArgumentType.Variable:
-                    var operations1 = CreateOperations(argumentData.Data);
-
-                    if (operations1[^1].Operation is Operation.LoadVariable)
-                    {
-                        argument = new ScriptArgumentVariable { Value = operations1[^1].Value };
-                        break;
-                    }
-
-                    argument = new ScriptArgumentExpression { Operations = operations1 };
+                    argument = new ScriptArgumentExpression { Operations = CreateOperations(argumentData.Data) };
                     break;
 
                 case ArgumentType.String:
@@ -138,17 +115,10 @@ internal class ScriptParser(IScriptReader reader) : IScriptParser
             if (operation is Operation.Exit)
                 break;
 
-            switch (operation)
+            if (operation is Operation.LoadInt or Operation.LoadVariable)
             {
-                case Operation.LoadInt:
-                    value = BinaryPrimitives.ReadInt32LittleEndian(data.AsSpan(i + 1, 4));
-                    i += 4;
-                    break;
-
-                case Operation.LoadVariable:
-                    value = BinaryPrimitives.ReadInt32LittleEndian(data.AsSpan(i + 1, 4));
-                    i += 4;
-                    break;
+                value = BinaryPrimitives.ReadInt32LittleEndian(data.AsSpan(i + 1, 4));
+                i += 4;
             }
 
             result.Add(new ExpressionOperation(operation, value));
