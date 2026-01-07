@@ -36,7 +36,7 @@ public class CommaSeparatedSyntaxList<TNode> : SyntaxNode
             position = parameter.UpdatePosition(position, ref line, ref column);
 
             if (parameter != Elements[^1])
-                position++;
+                position += 2;
         }
 
         return position;

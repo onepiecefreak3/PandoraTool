@@ -97,7 +97,7 @@ internal class ScriptParser(IScriptReader reader) : IScriptParser
                         break;
                     }
 
-                    argument = new ScriptArgumentExpression { Data = argumentData.Data, Type = ArgumentType.Value, Operations = operations };
+                    argument = new ScriptArgumentExpression { Operations = operations };
                     break;
 
                 case ArgumentType.Variable:
@@ -109,7 +109,7 @@ internal class ScriptParser(IScriptReader reader) : IScriptParser
                         break;
                     }
 
-                    argument = new ScriptArgumentExpression { Data = argumentData.Data, Type = ArgumentType.Variable, Operations = operations1 };
+                    argument = new ScriptArgumentExpression { Operations = operations1 };
                     break;
 
                 case ArgumentType.String:

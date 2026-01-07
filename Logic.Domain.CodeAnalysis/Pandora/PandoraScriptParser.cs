@@ -9,6 +9,28 @@ namespace Logic.Domain.CodeAnalysis.Pandora;
 
 internal class PandoraScriptParser : IPandoraScriptParser
 {
+    private readonly Dictionary<SyntaxTokenKind, int> _tokenPrecedence = new()
+    {
+        [SyntaxTokenKind.Asterisk] = 9,
+        [SyntaxTokenKind.Slash] = 9,
+        [SyntaxTokenKind.Percent] = 9,
+        [SyntaxTokenKind.Plus] = 8,
+        [SyntaxTokenKind.Minus] = 8,
+        [SyntaxTokenKind.ShiftLeft] = 7,
+        [SyntaxTokenKind.ShiftRight] = 7,
+        [SyntaxTokenKind.GreaterThan] = 6,
+        [SyntaxTokenKind.GreaterEquals] = 6,
+        [SyntaxTokenKind.SmallerThan] = 6,
+        [SyntaxTokenKind.SmallerEquals] = 6,
+        [SyntaxTokenKind.EqualsEquals] = 5,
+        [SyntaxTokenKind.NotEquals] = 5,
+        [SyntaxTokenKind.Ampersand] = 4,
+        [SyntaxTokenKind.Caret] = 3,
+        [SyntaxTokenKind.Pipe] = 2,
+        [SyntaxTokenKind.AndKeyword] = 1,
+        [SyntaxTokenKind.OrKeyword] = 0
+    };
+
     private readonly ITokenFactory<PandoraSyntaxToken> _scriptFactory;
     private readonly IPandoraSyntaxFactory _syntaxFactory;
 
@@ -154,7 +176,97 @@ internal class PandoraScriptParser : IPandoraScriptParser
         return new CommaSeparatedSyntaxList<ExpressionSyntax>(result);
     }
 
-    private ExpressionSyntax ParseExpression(IBuffer<PandoraSyntaxToken> buffer)
+    private ExpressionSyntax ParseExpression(IBuffer<PandoraSyntaxToken> buffer, int minPrecedence = 0)
+    {
+        ExpressionSyntax left = ParseAtomicExpression(buffer);
+
+        while (IsCompoundExpression(buffer))
+        {
+            int currentPrecedence = _tokenPrecedence[buffer.Peek().Kind];
+
+            if (currentPrecedence < minPrecedence)
+                break;
+
+            bool isBinary = IsBinaryExpression(buffer);
+            bool isLogical = IsLogicalExpression(buffer);
+
+            SyntaxToken operatorToken = ParseOperatorToken(buffer);
+            int newMinPrecedence = currentPrecedence + 1;
+
+            ExpressionSyntax right = ParseExpression(buffer, newMinPrecedence);
+
+            if (isBinary)
+                left = new BinaryExpressionSyntax(left, operatorToken, right);
+            else if (isLogical)
+                left = new LogicalExpressionSyntax(left, operatorToken, right);
+        }
+
+        return left;
+    }
+
+    private SyntaxToken ParseOperatorToken(IBuffer<PandoraSyntaxToken> buffer)
+    {
+        if (HasTokenKind(buffer, SyntaxTokenKind.Asterisk))
+            return ParseAsteriskToken(buffer);
+
+        if (HasTokenKind(buffer, SyntaxTokenKind.Slash))
+            return ParseSlashToken(buffer);
+
+        if (HasTokenKind(buffer, SyntaxTokenKind.Percent))
+            return ParsePercentToken(buffer);
+
+        if (HasTokenKind(buffer, SyntaxTokenKind.Plus))
+            return ParsePlusToken(buffer);
+
+        if (HasTokenKind(buffer, SyntaxTokenKind.Minus))
+            return ParseMinusToken(buffer);
+
+        if (HasTokenKind(buffer, SyntaxTokenKind.ShiftLeft))
+            return ParseShiftLeftToken(buffer);
+
+        if (HasTokenKind(buffer, SyntaxTokenKind.ShiftRight))
+            return ParseShiftRightToken(buffer);
+
+        if (HasTokenKind(buffer, SyntaxTokenKind.GreaterThan))
+            return ParseGreaterThanToken(buffer);
+
+        if (HasTokenKind(buffer, SyntaxTokenKind.GreaterEquals))
+            return ParseGreaterEqualsToken(buffer);
+
+        if (HasTokenKind(buffer, SyntaxTokenKind.SmallerThan))
+            return ParseSmallerThanToken(buffer);
+
+        if (HasTokenKind(buffer, SyntaxTokenKind.SmallerEquals))
+            return ParseSmallerEqualsToken(buffer);
+
+        if (HasTokenKind(buffer, SyntaxTokenKind.EqualsEquals))
+            return ParseEqualsEqualsToken(buffer);
+
+        if (HasTokenKind(buffer, SyntaxTokenKind.NotEquals))
+            return ParseNotEqualsToken(buffer);
+
+        if (HasTokenKind(buffer, SyntaxTokenKind.Ampersand))
+            return ParseAmpersandToken(buffer);
+
+        if (HasTokenKind(buffer, SyntaxTokenKind.Caret))
+            return ParseCaretToken(buffer);
+
+        if (HasTokenKind(buffer, SyntaxTokenKind.Pipe))
+            return ParsePipeToken(buffer);
+
+        if (HasTokenKind(buffer, SyntaxTokenKind.AndKeyword))
+            return ParseAndKeywordToken(buffer);
+
+        if (HasTokenKind(buffer, SyntaxTokenKind.OrKeyword))
+            return ParseOrKeywordToken(buffer);
+
+        throw CreateException(buffer, "Invalid expression.", SyntaxTokenKind.Asterisk, SyntaxTokenKind.Slash, SyntaxTokenKind.Percent, SyntaxTokenKind.Plus,
+            SyntaxTokenKind.Minus, SyntaxTokenKind.ShiftLeft, SyntaxTokenKind.ShiftRight, SyntaxTokenKind.GreaterThan, SyntaxTokenKind.GreaterEquals,
+            SyntaxTokenKind.SmallerThan, SyntaxTokenKind.SmallerEquals, SyntaxTokenKind.EqualsEquals, SyntaxTokenKind.NotEquals, SyntaxTokenKind.Ampersand,
+            SyntaxTokenKind.Caret, SyntaxTokenKind.Pipe, SyntaxTokenKind.AndKeyword, SyntaxTokenKind.OrKeyword);
+    }
+
+    private ExpressionSyntax ParseAtomicExpression(IBuffer<PandoraSyntaxToken> buffer)
     {
         if (IsLiteralExpression(buffer))
             return ParseLiteralExpression(buffer);
@@ -162,8 +274,42 @@ internal class PandoraScriptParser : IPandoraScriptParser
         if (IsVariableExpression(buffer))
             return ParseVariableExpression(buffer);
 
+        if (IsParenthesizedExpression(buffer))
+            return ParseParenthesizedExpression(buffer);
+
         throw CreateException(buffer, "Invalid expression.", SyntaxTokenKind.StringLiteral, SyntaxTokenKind.DataLiteral, SyntaxTokenKind.NumericLiteral,
-            SyntaxTokenKind.JumpLiteral, SyntaxTokenKind.VarsKeyword);
+            SyntaxTokenKind.JumpLiteral, SyntaxTokenKind.VarsKeyword, SyntaxTokenKind.ParenOpen);
+    }
+
+    private bool IsCompoundExpression(IBuffer<PandoraSyntaxToken> buffer)
+    {
+        return IsBinaryExpression(buffer) ||
+               IsLogicalExpression(buffer);
+    }
+
+    private bool IsBinaryExpression(IBuffer<PandoraSyntaxToken> buffer)
+    {
+        return HasTokenKind(buffer, SyntaxTokenKind.Asterisk) ||
+               HasTokenKind(buffer, SyntaxTokenKind.Slash) ||
+               HasTokenKind(buffer, SyntaxTokenKind.Percent) ||
+               HasTokenKind(buffer, SyntaxTokenKind.Plus) ||
+               HasTokenKind(buffer, SyntaxTokenKind.Minus) ||
+               HasTokenKind(buffer, SyntaxTokenKind.ShiftLeft) ||
+               HasTokenKind(buffer, SyntaxTokenKind.ShiftRight) ||
+               HasTokenKind(buffer, SyntaxTokenKind.GreaterThan) ||
+               HasTokenKind(buffer, SyntaxTokenKind.GreaterEquals) ||
+               HasTokenKind(buffer, SyntaxTokenKind.SmallerThan) ||
+               HasTokenKind(buffer, SyntaxTokenKind.SmallerEquals) ||
+               HasTokenKind(buffer, SyntaxTokenKind.EqualsEquals) ||
+               HasTokenKind(buffer, SyntaxTokenKind.NotEquals) ||
+               HasTokenKind(buffer, SyntaxTokenKind.Ampersand) ||
+               HasTokenKind(buffer, SyntaxTokenKind.Caret) ||
+               HasTokenKind(buffer, SyntaxTokenKind.Pipe);
+    }
+    private bool IsLogicalExpression(IBuffer<PandoraSyntaxToken> buffer)
+    {
+        return HasTokenKind(buffer, SyntaxTokenKind.AndKeyword) ||
+               HasTokenKind(buffer, SyntaxTokenKind.OrKeyword);
     }
 
     private bool IsLiteralExpression(IBuffer<PandoraSyntaxToken> buffer)
@@ -177,6 +323,20 @@ internal class PandoraScriptParser : IPandoraScriptParser
     private bool IsVariableExpression(IBuffer<PandoraSyntaxToken> buffer)
     {
         return HasTokenKind(buffer, SyntaxTokenKind.VarsKeyword);
+    }
+
+    private bool IsParenthesizedExpression(IBuffer<PandoraSyntaxToken> buffer)
+    {
+        return HasTokenKind(buffer, SyntaxTokenKind.ParenOpen);
+    }
+
+    private ParenthesizedExpressionSyntax ParseParenthesizedExpression(IBuffer<PandoraSyntaxToken> buffer)
+    {
+        var parenOpen = ParseParenOpenToken(buffer);
+        var expression = ParseExpression(buffer);
+        var parenClose = ParseParenCloseToken(buffer);
+
+        return new ParenthesizedExpressionSyntax(parenOpen, expression, parenClose);
     }
 
     private LiteralExpressionSyntax ParseLiteralExpression(IBuffer<PandoraSyntaxToken> buffer)
@@ -263,6 +423,86 @@ internal class PandoraScriptParser : IPandoraScriptParser
         return CreateToken(buffer, SyntaxTokenKind.Semicolon);
     }
 
+    private SyntaxToken ParseAsteriskToken(IBuffer<PandoraSyntaxToken> buffer)
+    {
+        return CreateToken(buffer, SyntaxTokenKind.Asterisk);
+    }
+
+    private SyntaxToken ParseSlashToken(IBuffer<PandoraSyntaxToken> buffer)
+    {
+        return CreateToken(buffer, SyntaxTokenKind.Slash);
+    }
+
+    private SyntaxToken ParsePercentToken(IBuffer<PandoraSyntaxToken> buffer)
+    {
+        return CreateToken(buffer, SyntaxTokenKind.Percent);
+    }
+
+    private SyntaxToken ParsePlusToken(IBuffer<PandoraSyntaxToken> buffer)
+    {
+        return CreateToken(buffer, SyntaxTokenKind.Plus);
+    }
+
+    private SyntaxToken ParseMinusToken(IBuffer<PandoraSyntaxToken> buffer)
+    {
+        return CreateToken(buffer, SyntaxTokenKind.Minus);
+    }
+
+    private SyntaxToken ParseShiftLeftToken(IBuffer<PandoraSyntaxToken> buffer)
+    {
+        return CreateToken(buffer, SyntaxTokenKind.ShiftLeft);
+    }
+
+    private SyntaxToken ParseShiftRightToken(IBuffer<PandoraSyntaxToken> buffer)
+    {
+        return CreateToken(buffer, SyntaxTokenKind.ShiftRight);
+    }
+
+    private SyntaxToken ParseGreaterThanToken(IBuffer<PandoraSyntaxToken> buffer)
+    {
+        return CreateToken(buffer, SyntaxTokenKind.GreaterThan);
+    }
+
+    private SyntaxToken ParseGreaterEqualsToken(IBuffer<PandoraSyntaxToken> buffer)
+    {
+        return CreateToken(buffer, SyntaxTokenKind.GreaterEquals);
+    }
+
+    private SyntaxToken ParseSmallerThanToken(IBuffer<PandoraSyntaxToken> buffer)
+    {
+        return CreateToken(buffer, SyntaxTokenKind.SmallerThan);
+    }
+
+    private SyntaxToken ParseSmallerEqualsToken(IBuffer<PandoraSyntaxToken> buffer)
+    {
+        return CreateToken(buffer, SyntaxTokenKind.SmallerEquals);
+    }
+
+    private SyntaxToken ParseEqualsEqualsToken(IBuffer<PandoraSyntaxToken> buffer)
+    {
+        return CreateToken(buffer, SyntaxTokenKind.EqualsEquals);
+    }
+
+    private SyntaxToken ParseNotEqualsToken(IBuffer<PandoraSyntaxToken> buffer)
+    {
+        return CreateToken(buffer, SyntaxTokenKind.NotEquals);
+    }
+
+    private SyntaxToken ParseAmpersandToken(IBuffer<PandoraSyntaxToken> buffer)
+    {
+        return CreateToken(buffer, SyntaxTokenKind.Ampersand);
+    }
+
+    private SyntaxToken ParseCaretToken(IBuffer<PandoraSyntaxToken> buffer)
+    {
+        return CreateToken(buffer, SyntaxTokenKind.Caret);
+    }
+
+    private SyntaxToken ParsePipeToken(IBuffer<PandoraSyntaxToken> buffer)
+    {
+        return CreateToken(buffer, SyntaxTokenKind.Pipe);
+    }
+
     private SyntaxToken ParseParenOpenToken(IBuffer<PandoraSyntaxToken> buffer)
     {
         return CreateToken(buffer, SyntaxTokenKind.ParenOpen);
@@ -321,6 +561,16 @@ internal class PandoraScriptParser : IPandoraScriptParser
     private SyntaxToken ParseVarsKeywordToken(IBuffer<PandoraSyntaxToken> buffer)
     {
         return CreateToken(buffer, SyntaxTokenKind.VarsKeyword);
+    }
+
+    private SyntaxToken ParseAndKeywordToken(IBuffer<PandoraSyntaxToken> buffer)
+    {
+        return CreateToken(buffer, SyntaxTokenKind.AndKeyword);
+    }
+
+    private SyntaxToken ParseOrKeywordToken(IBuffer<PandoraSyntaxToken> buffer)
+    {
+        return CreateToken(buffer, SyntaxTokenKind.OrKeyword);
     }
 
     private SyntaxToken CreateToken(IBuffer<PandoraSyntaxToken> buffer, SyntaxTokenKind expectedKind)

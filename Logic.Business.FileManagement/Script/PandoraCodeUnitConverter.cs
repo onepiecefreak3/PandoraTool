@@ -2,6 +2,7 @@
 using Logic.Domain.CodeAnalysis.Contract.DataClasses;
 using Logic.Domain.CodeAnalysis.Contract.DataClasses.Pandora;
 using Logic.Domain.PandoraManagement.Contract.DataClasses.Script;
+using Logic.Domain.PandoraManagement.Contract.Enums.Script;
 using System.Text.RegularExpressions;
 
 namespace Logic.Business.FileManagement.Script;
@@ -80,8 +81,141 @@ internal class PandoraCodeUnitConverter : IPandoraCodeUnitConverter
                 AddArgument(arguments, literal);
                 break;
 
+            default:
+                var operations = new List<ExpressionOperation>();
+                AddOperations(operations, parameter);
+
+                arguments.Add(new ScriptArgumentExpression { Operations = [.. operations] });
+                break;
+        }
+    }
+
+    private void AddOperations(List<ExpressionOperation> operations, ExpressionSyntax expression)
+    {
+        switch (expression)
+        {
+            case LiteralExpressionSyntax literal:
+                if (literal.Literal.RawKind is not (int)SyntaxTokenKind.NumericLiteral)
+                    throw CreateException("Literals should only be numeric in expressions.", literal.Location, SyntaxTokenKind.NumericLiteral);
+
+                operations.Add(new ExpressionOperation(Operation.LoadInt, int.Parse(literal.Literal.Text)));
+                break;
+
             case VariableExpressionSyntax variable:
-                AddArgument(arguments, variable);
+                if (variable.Expression is LiteralExpressionSyntax variableLiteral)
+                {
+                    if (variableLiteral.Literal.RawKind is not (int)SyntaxTokenKind.NumericLiteral)
+                        throw CreateException("Literals should only be numeric in expressions.", variableLiteral.Location, SyntaxTokenKind.NumericLiteral);
+
+                    operations.Add(new ExpressionOperation(Operation.LoadVariable, int.Parse(variableLiteral.Literal.Text)));
+                }
+                else
+                {
+                    AddOperations(operations, variable.Expression);
+                    operations.Add(new ExpressionOperation(Operation.ValueToVariableValue, -1));
+                }
+                break;
+
+            case ParenthesizedExpressionSyntax parenthesizedExpression:
+                AddOperations(operations, parenthesizedExpression.Expression);
+                break;
+
+            case BinaryExpressionSyntax binary:
+                AddOperations(operations, binary.Left);
+                AddOperations(operations, binary.Right);
+
+                switch (binary.Operation.RawKind)
+                {
+                    case (int)SyntaxTokenKind.Asterisk:
+                        operations.Add(new ExpressionOperation(Operation.Multiply, -1));
+                        break;
+
+                    case (int)SyntaxTokenKind.Slash:
+                        operations.Add(new ExpressionOperation(Operation.Divide, -1));
+                        break;
+
+                    case (int)SyntaxTokenKind.Percent:
+                        operations.Add(new ExpressionOperation(Operation.Modulo, -1));
+                        break;
+
+                    case (int)SyntaxTokenKind.Plus:
+                        operations.Add(new ExpressionOperation(Operation.Add, -1));
+                        break;
+
+                    case (int)SyntaxTokenKind.Minus:
+                        operations.Add(new ExpressionOperation(Operation.Subtract, -1));
+                        break;
+
+                    case (int)SyntaxTokenKind.ShiftLeft:
+                        operations.Add(new ExpressionOperation(Operation.ShiftLeft, -1));
+                        break;
+
+                    case (int)SyntaxTokenKind.ShiftRight:
+                        operations.Add(new ExpressionOperation(Operation.ShiftRight, -1));
+                        break;
+
+                    case (int)SyntaxTokenKind.GreaterEquals:
+                        operations.Add(new ExpressionOperation(Operation.GreaterEquals, -1));
+                        break;
+
+                    case (int)SyntaxTokenKind.GreaterThan:
+                        operations.Add(new ExpressionOperation(Operation.GreaterThan, -1));
+                        break;
+
+                    case (int)SyntaxTokenKind.SmallerEquals:
+                        operations.Add(new ExpressionOperation(Operation.SmallerEquals, -1));
+                        break;
+
+                    case (int)SyntaxTokenKind.SmallerThan:
+                        operations.Add(new ExpressionOperation(Operation.SmallerThan, -1));
+                        break;
+
+                    case (int)SyntaxTokenKind.EqualsEquals:
+                        operations.Add(new ExpressionOperation(Operation.Equals, -1));
+                        break;
+
+                    case (int)SyntaxTokenKind.NotEquals:
+                        operations.Add(new ExpressionOperation(Operation.NotEquals, -1));
+                        break;
+
+                    case (int)SyntaxTokenKind.Ampersand:
+                        operations.Add(new ExpressionOperation(Operation.BitwiseAnd, -1));
+                        break;
+
+                    case (int)SyntaxTokenKind.Caret:
+                        operations.Add(new ExpressionOperation(Operation.BitwiseXor, -1));
+                        break;
+
+                    case (int)SyntaxTokenKind.Pipe:
+                        operations.Add(new ExpressionOperation(Operation.BitwiseOr, -1));
+                        break;
+
+                    default:
+                        throw CreateException("Invalid binary expression.", expression.Location, SyntaxTokenKind.Asterisk, SyntaxTokenKind.Slash,
+                            SyntaxTokenKind.Percent, SyntaxTokenKind.Plus, SyntaxTokenKind.Minus, SyntaxTokenKind.ShiftLeft, SyntaxTokenKind.ShiftRight,
+                            SyntaxTokenKind.GreaterEquals, SyntaxTokenKind.GreaterThan, SyntaxTokenKind.SmallerEquals, SyntaxTokenKind.SmallerThan,
+                            SyntaxTokenKind.EqualsEquals, SyntaxTokenKind.NotEquals, SyntaxTokenKind.Ampersand, SyntaxTokenKind.Caret,
+                            SyntaxTokenKind.Pipe);
+                }
+                break;
+
+            case LogicalExpressionSyntax logical:
+                AddOperations(operations, logical.Left);
+                AddOperations(operations, logical.Right);
+
+                switch (logical.Operation.RawKind)
+                {
+                    case (int)SyntaxTokenKind.AndKeyword:
+                        operations.Add(new ExpressionOperation(Operation.LogicalAnd, -1));
+                        break;
+
+                    case (int)SyntaxTokenKind.OrKeyword:
+                        operations.Add(new ExpressionOperation(Operation.LogicalOr, -1));
+                        break;
+
+                    default:
+                        throw CreateException("Invalid logical expression.", expression.Location, SyntaxTokenKind.AndKeyword, SyntaxTokenKind.OrKeyword);
+                }
                 break;
         }
     }
@@ -116,14 +250,6 @@ internal class PandoraCodeUnitConverter : IPandoraCodeUnitConverter
                 arguments.Add(new ScriptArgumentInt { Value = int.Parse(literal.Literal.Text) });
                 break;
         }
-    }
-
-    private void AddArgument(List<ScriptArgument> arguments, VariableExpressionSyntax variable)
-    {
-        if (variable.Expression is not LiteralExpressionSyntax literal)
-            throw CreateException("Could not determine index of variable.", variable.Expression.Location);
-
-        arguments.Add(new ScriptArgumentVariable { Value = int.Parse(literal.Literal.Text) });
     }
 
     private int GetInstruction(NameSyntax name)

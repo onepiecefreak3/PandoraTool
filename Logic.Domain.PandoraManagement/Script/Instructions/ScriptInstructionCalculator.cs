@@ -1,6 +1,7 @@
 ﻿using Logic.Domain.PandoraManagement.Contract.DataClasses.Script;
 using Logic.Domain.PandoraManagement.InternalContract.Script.Instructions;
 using System.Text;
+using Logic.Domain.PandoraManagement.Contract.Enums.Script;
 
 namespace Logic.Domain.PandoraManagement.Script.Instructions;
 
@@ -52,9 +53,11 @@ internal abstract class ScriptInstructionCalculator : IScriptInstructionCalculat
         if (argumentIndex >= instruction.Arguments.Length)
             throw new InvalidOperationException($"Instruction {instruction.Instruction} requires a data or numeric argument at position {argumentIndex}.");
 
-        if (instruction.Arguments[argumentIndex] is ScriptArgumentBytes bytes)
-            length += bytes.Data.Length;
+        if (instruction.Arguments[argumentIndex] is ScriptArgumentExpression expression)
+            length += CalculateExpression(expression);
         else if (instruction.Arguments[argumentIndex] is ScriptArgumentInt)
+            length += 6;
+        else if (instruction.Arguments[argumentIndex] is ScriptArgumentVariable)
             length += 6;
         else
             throw new InvalidOperationException($"Instruction {instruction.Instruction} requires a data or numeric argument at position {argumentIndex}.");
@@ -65,8 +68,8 @@ internal abstract class ScriptInstructionCalculator : IScriptInstructionCalculat
         if (argumentIndex >= instruction.Arguments.Length)
             throw new InvalidOperationException($"Instruction {instruction.Instruction} requires a data or variable argument at position {argumentIndex}.");
 
-        if (instruction.Arguments[argumentIndex] is ScriptArgumentBytes bytes)
-            length += bytes.Data.Length;
+        if (instruction.Arguments[argumentIndex] is ScriptArgumentExpression expression)
+            length += CalculateExpression(expression);
         else if (instruction.Arguments[argumentIndex] is ScriptArgumentVariable)
             length += 6;
         else
@@ -79,5 +82,20 @@ internal abstract class ScriptInstructionCalculator : IScriptInstructionCalculat
             throw new InvalidOperationException($"Instruction {instruction.Instruction} requires a string argument at position {argumentIndex}.");
 
         length += Sjis.GetByteCount(text.Text + '\0');
+    }
+
+    private static int CalculateExpression(ScriptArgumentExpression expression)
+    {
+        var length = 1;
+
+        foreach (var operation in expression.Operations)
+        {
+            if (operation.Operation is Operation.LoadInt or Operation.LoadVariable)
+                length += 4;
+
+            length++;
+        }
+
+        return length;
     }
 }

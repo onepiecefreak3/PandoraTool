@@ -76,7 +76,6 @@ internal class InjectFileWorkflow(
                     ScriptInstruction[] instructions = codeUnitConverter.CreateInstructions(codeUnit);
 
                     byte[] scriptData = scriptComposer.Compose(instructions);
-                    File.WriteAllBytes(filePath + ".new", scriptData);
 
                     file.Data = fileCompressor.Compress(new MemoryStream(scriptData), file.Compression);
                     break;

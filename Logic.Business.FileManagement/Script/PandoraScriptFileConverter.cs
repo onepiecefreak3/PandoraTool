@@ -3,11 +3,56 @@ using Logic.Domain.CodeAnalysis.Contract.DataClasses;
 using Logic.Domain.CodeAnalysis.Contract.DataClasses.Pandora;
 using Logic.Domain.CodeAnalysis.Contract.Pandora;
 using Logic.Domain.PandoraManagement.Contract.DataClasses.Script;
+using Logic.Domain.PandoraManagement.Contract.Enums.Script;
 
 namespace Logic.Business.FileManagement.Script;
 
 internal class PandoraScriptFileConverter(IPandoraSyntaxFactory syntaxFactory) : IPandoraScriptFileConverter
 {
+    private readonly Dictionary<Operation, int> _operatorPrecedence = new()
+    {
+        [Operation.Multiply] = 0,
+        [Operation.Divide] = 0,
+        [Operation.Modulo] = 0,
+        [Operation.Add] = 1,
+        [Operation.Subtract] = 1,
+        [Operation.ShiftLeft] = 2,
+        [Operation.ShiftRight] = 2,
+        [Operation.GreaterThan] = 3,
+        [Operation.GreaterEquals] = 3,
+        [Operation.SmallerThan] = 3,
+        [Operation.SmallerEquals] = 3,
+        [Operation.Equals] = 4,
+        [Operation.NotEquals] = 4,
+        [Operation.BitwiseAnd] = 5,
+        [Operation.BitwiseXor] = 6,
+        [Operation.BitwiseOr] = 7,
+        [Operation.LogicalAnd] = 8,
+        [Operation.LogicalOr] = 9
+    };
+
+    private readonly Dictionary<SyntaxTokenKind, int> _tokenPrecedence = new()
+    {
+        [SyntaxTokenKind.Asterisk] = 0,
+        [SyntaxTokenKind.Slash] = 0,
+        [SyntaxTokenKind.Percent] = 0,
+        [SyntaxTokenKind.Plus] = 1,
+        [SyntaxTokenKind.Minus] = 1,
+        [SyntaxTokenKind.ShiftLeft] = 2,
+        [SyntaxTokenKind.ShiftRight] = 2,
+        [SyntaxTokenKind.GreaterThan] = 3,
+        [SyntaxTokenKind.GreaterEquals] = 3,
+        [SyntaxTokenKind.SmallerThan] = 3,
+        [SyntaxTokenKind.SmallerEquals] = 3,
+        [SyntaxTokenKind.EqualsEquals] = 4,
+        [SyntaxTokenKind.NotEquals] = 4,
+        [SyntaxTokenKind.Ampersand] = 5,
+        [SyntaxTokenKind.Caret] = 6,
+        [SyntaxTokenKind.Pipe] = 7,
+        [SyntaxTokenKind.AndKeyword] = 8,
+        [SyntaxTokenKind.OrKeyword] = 9
+    };
+
     public CodeUnitSyntax CreateCodeUnit(ScriptInstruction[] instructions)
     {
         IReadOnlyList<MethodDeclarationSyntax> methods = CreateMethodDeclarations(instructions);
@@ -117,6 +162,9 @@ internal class PandoraScriptFileConverter(IPandoraSyntaxFactory syntaxFactory) :
     {
         switch (argument)
         {
+            case ScriptArgumentExpression expression:
+                return CreateExpression(expression.Operations);
+
             case ScriptArgumentBytes data:
                 return CreateDataLiteralExpression(data.Data);
 
@@ -135,6 +183,208 @@ internal class PandoraScriptFileConverter(IPandoraSyntaxFactory syntaxFactory) :
             default:
                 throw new InvalidOperationException("Unknown argument.");
         }
+    }
+
+    private ExpressionSyntax CreateExpression(ExpressionOperation[] operations)
+    {
+        var stack = new Stack<ExpressionSyntax>();
+
+        foreach (var operation in operations)
+        {
+            switch (operation.Operation)
+            {
+                case Operation.LoadInt:
+                    stack.Push(CreateNumberLiteralExpression(operation.Value));
+                    break;
+
+                case Operation.LoadVariable:
+                    stack.Push(CreateVariableExpression(operation.Value));
+                    break;
+
+                case Operation.ValueToVariableValue:
+                    stack.Push(CreateVariableExpression(stack.Pop()));
+                    break;
+
+                case Operation.Multiply:
+                case Operation.Divide:
+                case Operation.Modulo:
+                case Operation.Add:
+                case Operation.Subtract:
+                case Operation.ShiftLeft:
+                case Operation.ShiftRight:
+                case Operation.GreaterEquals:
+                case Operation.GreaterThan:
+                case Operation.SmallerEquals:
+                case Operation.SmallerThan:
+                case Operation.Equals:
+                case Operation.NotEquals:
+                case Operation.BitwiseAnd:
+                case Operation.BitwiseXor:
+                case Operation.BitwiseOr:
+                    stack.Push(CreateBinaryExpression(stack, operation.Operation));
+                    break;
+
+                case Operation.LogicalAnd:
+                case Operation.LogicalOr:
+                    stack.Push(CreateLogicalExpression(stack, operation.Operation));
+                    break;
+
+                default:
+                    throw new InvalidOperationException($"Unknown operation {operation}.");
+            }
+        }
+
+        return stack.Pop();
+    }
+
+    private BinaryExpressionSyntax CreateBinaryExpression(Stack<ExpressionSyntax> syntax, Operation operation)
+    {
+        var right = syntax.Pop();
+        var left = syntax.Pop();
+
+        SyntaxToken operatorToken;
+        switch (operation)
+        {
+            case Operation.Multiply:
+                operatorToken = syntaxFactory.Token(SyntaxTokenKind.Asterisk);
+                break;
+
+            case Operation.Divide:
+                operatorToken = syntaxFactory.Token(SyntaxTokenKind.Slash);
+                break;
+
+            case Operation.Modulo:
+                operatorToken = syntaxFactory.Token(SyntaxTokenKind.Percent);
+                break;
+
+            case Operation.Add:
+                operatorToken = syntaxFactory.Token(SyntaxTokenKind.Plus);
+                break;
+
+            case Operation.Subtract:
+                operatorToken = syntaxFactory.Token(SyntaxTokenKind.Minus);
+                break;
+
+            case Operation.ShiftLeft:
+                operatorToken = syntaxFactory.Token(SyntaxTokenKind.ShiftLeft);
+                break;
+
+            case Operation.ShiftRight:
+                operatorToken = syntaxFactory.Token(SyntaxTokenKind.ShiftRight);
+                break;
+
+            case Operation.GreaterEquals:
+                operatorToken = syntaxFactory.Token(SyntaxTokenKind.GreaterEquals);
+                break;
+
+            case Operation.GreaterThan:
+                operatorToken = syntaxFactory.Token(SyntaxTokenKind.GreaterThan);
+                break;
+
+            case Operation.SmallerEquals:
+                operatorToken = syntaxFactory.Token(SyntaxTokenKind.SmallerEquals);
+                break;
+
+            case Operation.SmallerThan:
+                operatorToken = syntaxFactory.Token(SyntaxTokenKind.SmallerThan);
+                break;
+
+            case Operation.Equals:
+                operatorToken = syntaxFactory.Token(SyntaxTokenKind.EqualsEquals);
+                break;
+
+            case Operation.NotEquals:
+                operatorToken = syntaxFactory.Token(SyntaxTokenKind.NotEquals);
+                break;
+
+            case Operation.BitwiseAnd:
+                operatorToken = syntaxFactory.Token(SyntaxTokenKind.Ampersand);
+                break;
+
+            case Operation.BitwiseXor:
+                operatorToken = syntaxFactory.Token(SyntaxTokenKind.Caret);
+                break;
+
+            case Operation.BitwiseOr:
+                operatorToken = syntaxFactory.Token(SyntaxTokenKind.Pipe);
+                break;
+
+            default:
+                throw new InvalidOperationException($"Unknown binary operation {operation}.");
+        }
+
+        int currentPrecedence = _operatorPrecedence[operation];
+
+        if (left is LogicalExpressionSyntax)
+            left = CreateParenthesizedExpression(left);
+        else if (left is BinaryExpressionSyntax binary)
+        {
+            int leftPrecedence = _tokenPrecedence[(SyntaxTokenKind)binary.Operation.RawKind];
+
+            if (currentPrecedence < leftPrecedence)
+                left = CreateParenthesizedExpression(left);
+        }
+
+        if (right is LogicalExpressionSyntax)
+            right = CreateParenthesizedExpression(right);
+        else if (right is BinaryExpressionSyntax binary)
+        {
+            int rightPrecedence = _tokenPrecedence[(SyntaxTokenKind)binary.Operation.RawKind];
+
+            if (currentPrecedence <= rightPrecedence)
+                right = CreateParenthesizedExpression(right);
+        }
+
+        return new BinaryExpressionSyntax(left, operatorToken, right);
+    }
+
+    private LogicalExpressionSyntax CreateLogicalExpression(Stack<ExpressionSyntax> syntax, Operation operation)
+    {
+        var right = syntax.Pop();
+        var left = syntax.Pop();
+
+        SyntaxToken operatorToken;
+        switch (operation)
+        {
+            case Operation.LogicalAnd:
+                operatorToken = syntaxFactory.Token(SyntaxTokenKind.AndKeyword);
+                break;
+
+            case Operation.LogicalOr:
+                operatorToken = syntaxFactory.Token(SyntaxTokenKind.OrKeyword);
+                break;
+
+            default:
+                throw new InvalidOperationException($"Unknown logical operation {operation}.");
+        }
+
+        int currentPrecedence = _operatorPrecedence[operation];
+
+        if (left is LogicalExpressionSyntax logical)
+        {
+            int leftPrecedence = _tokenPrecedence[(SyntaxTokenKind)logical.Operation.RawKind];
+
+            if (currentPrecedence < leftPrecedence)
+                left = CreateParenthesizedExpression(left);
+        }
+
+        if (right is LogicalExpressionSyntax logical1)
+        {
+            int rightPrecedence = _tokenPrecedence[(SyntaxTokenKind)logical1.Operation.RawKind];
+
+            if (currentPrecedence < rightPrecedence)
+                right = CreateParenthesizedExpression(right);
+        }
+
+        return new LogicalExpressionSyntax(left, operatorToken, right);
+    }
+
+    private ParenthesizedExpressionSyntax CreateParenthesizedExpression(ExpressionSyntax expression)
+    {
+        var parenOpen = syntaxFactory.Token(SyntaxTokenKind.ParenOpen);
+        var parenClose = syntaxFactory.Token(SyntaxTokenKind.ParenClose);
+
+        return new ParenthesizedExpressionSyntax(parenOpen, expression, parenClose);
     }
 
     private VariableExpressionSyntax CreateVariableExpression(int variable)

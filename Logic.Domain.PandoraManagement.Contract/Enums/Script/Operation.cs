@@ -24,9 +24,9 @@ public enum Operation : byte
     SmallerThan = 0x92,
     Equals = 0x93,
     NotEquals = 0x94,
-    BinaryAnd = 0x95,
-    BinaryXor = 0x96,
-    BinaryOr = 0x97,
+    BitwiseAnd = 0x95,
+    BitwiseXor = 0x96,
+    BitwiseOr = 0x97,
     LogicalAnd = 0x98,
     LogicalOr = 0x99,
     SetVariable = 0x9A

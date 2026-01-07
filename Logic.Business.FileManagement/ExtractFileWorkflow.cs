@@ -71,8 +71,6 @@ internal class ExtractFileWorkflow(
                     break;
 
                 case FileType.Script:
-                    File.WriteAllBytes(newFilePath, fileData);
-
                     newFilePath = Path.ChangeExtension(newFilePath, ".txt");
 
                     ScriptInstruction[] instructions = scriptParser.Parse(fileData);

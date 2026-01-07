@@ -19,6 +19,22 @@ internal class PandoraSyntaxFactory : IPandoraSyntaxFactory
             case SyntaxTokenKind.Comma: return new(",", (int)kind);
             case SyntaxTokenKind.Colon: return new(":", (int)kind);
             case SyntaxTokenKind.Semicolon: return new(";", (int)kind);
+            case SyntaxTokenKind.Asterisk: return new("*", (int)kind);
+            case SyntaxTokenKind.Slash: return new("/", (int)kind);
+            case SyntaxTokenKind.Percent: return new("%", (int)kind);
+            case SyntaxTokenKind.Plus: return new("+", (int)kind);
+            case SyntaxTokenKind.Minus: return new("-", (int)kind);
+            case SyntaxTokenKind.Ampersand: return new("&", (int)kind);
+            case SyntaxTokenKind.Pipe: return new("|", (int)kind);
+            case SyntaxTokenKind.Caret: return new("^", (int)kind);
+            case SyntaxTokenKind.EqualsEquals: return new("==", (int)kind);
+            case SyntaxTokenKind.NotEquals: return new("!=", (int)kind);
+            case SyntaxTokenKind.SmallerThan: return new("<", (int)kind);
+            case SyntaxTokenKind.SmallerEquals: return new("<=", (int)kind);
+            case SyntaxTokenKind.GreaterThan: return new(">", (int)kind);
+            case SyntaxTokenKind.GreaterEquals: return new(">=", (int)kind);
+            case SyntaxTokenKind.ShiftLeft: return new("<<", (int)kind);
+            case SyntaxTokenKind.ShiftRight: return new(">>", (int)kind);
 
             case SyntaxTokenKind.ParenOpen: return new("(", (int)kind);
             case SyntaxTokenKind.ParenClose: return new(")", (int)kind);
@@ -27,6 +43,8 @@ internal class PandoraSyntaxFactory : IPandoraSyntaxFactory
             case SyntaxTokenKind.CurlyOpen: return new("{", (int)kind);
             case SyntaxTokenKind.CurlyClose: return new("}", (int)kind);
 
+            case SyntaxTokenKind.AndKeyword: return new("and", (int)kind);
+            case SyntaxTokenKind.OrKeyword: return new("or", (int)kind);
             case SyntaxTokenKind.VarsKeyword: return new("vars", (int)kind);
 
             default: throw new InvalidOperationException($"Cannot create simple token from kind {kind}. Use other methods instead.");

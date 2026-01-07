@@ -51,7 +51,7 @@ internal class PandoraScriptComposer : IPandoraScriptComposer
         for (var i = 0; i < valueList.Elements.Count - 1; i++)
         {
             ComposeExpression(valueList.Elements[i], sb);
-            ComposeSyntaxToken(_syntaxFactory.Token(SyntaxTokenKind.Comma), sb);
+            ComposeSyntaxToken(_syntaxFactory.Token(SyntaxTokenKind.Comma).WithTrailingTrivia(" "), sb);
         }
 
         ComposeExpression(valueList.Elements[^1], sb);
@@ -105,6 +105,18 @@ internal class PandoraScriptComposer : IPandoraScriptComposer
     {
         switch (expression)
         {
+            case ParenthesizedExpressionSyntax parens:
+                ComposeParenthesizedExpression(parens, sb);
+                break;
+
+            case BinaryExpressionSyntax binary:
+                ComposeBinaryExpression(binary, sb);
+                break;
+
+            case LogicalExpressionSyntax logical:
+                ComposeLogicalExpression(logical, sb);
+                break;
+
             case LiteralExpressionSyntax literal:
                 ComposeLiteralExpression(literal, sb);
                 break;
@@ -113,6 +125,27 @@ internal class PandoraScriptComposer : IPandoraScriptComposer
                 ComposeVariableExpression(variable, sb);
                 break;
         }
+    }
+
+    private void ComposeParenthesizedExpression(ParenthesizedExpressionSyntax parens, StringBuilder sb)
+    {
+        ComposeSyntaxToken(parens.ParenOpen, sb);
+        ComposeExpression(parens.Expression, sb);
+        ComposeSyntaxToken(parens.ParenClose, sb);
+    }
+
+    private void ComposeBinaryExpression(BinaryExpressionSyntax binary, StringBuilder sb)
+    {
+        ComposeExpression(binary.Left, sb);
+        ComposeSyntaxToken(binary.Operation, sb);
+        ComposeExpression(binary.Right, sb);
+    }
+
+    private void ComposeLogicalExpression(LogicalExpressionSyntax logical, StringBuilder sb)
+    {
+        ComposeExpression(logical.Left, sb);
+        ComposeSyntaxToken(logical.Operation, sb);
+        ComposeExpression(logical.Right, sb);
     }
 
     private void ComposeLiteralExpression(LiteralExpressionSyntax literal, StringBuilder sb)

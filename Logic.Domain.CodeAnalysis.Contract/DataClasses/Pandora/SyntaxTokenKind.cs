@@ -6,6 +6,22 @@ public enum SyntaxTokenKind
     Comma,
     Colon,
     Semicolon,
+    Asterisk,
+    Slash,
+    Percent,
+    Plus,
+    Minus,
+    Ampersand,
+    Pipe,
+    Caret,
+    EqualsEquals,
+    NotEquals,
+    SmallerThan,
+    SmallerEquals,
+    GreaterThan,
+    GreaterEquals,
+    ShiftLeft,
+    ShiftRight,
 
     ParenOpen,
     ParenClose,
@@ -22,6 +38,8 @@ public enum SyntaxTokenKind
     JumpLiteral,
 
     Identifier,
+    AndKeyword,
+    OrKeyword,
     VarsKeyword,
 
     EndOfFile

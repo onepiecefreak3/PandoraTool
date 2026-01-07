@@ -93,13 +93,13 @@ internal abstract class ScriptInstructionComposer : IScriptInstructionComposer
             throw new InvalidOperationException($"Instruction {instruction.Instruction} requires a data or numeric argument at position {argumentIndex}.");
 
         ScriptArgumentData argument;
-        if (instruction.Arguments[argumentIndex] is ScriptArgumentBytes bytes)
+        if (instruction.Arguments[argumentIndex] is ScriptArgumentExpression expression)
         {
             argument = new ScriptArgumentData
             {
                 Offset = offset,
                 Type = ArgumentType.Value,
-                Data = bytes.Data
+                Data = ComposeExpressionData(expression)
             };
         }
         else if (instruction.Arguments[argumentIndex] is ScriptArgumentInt value)
@@ -108,6 +108,20 @@ internal abstract class ScriptInstructionComposer : IScriptInstructionComposer
             buffer[0] = 0x01;
 
             BinaryPrimitives.WriteInt32LittleEndian(buffer.AsSpan(1), value.Value);
+
+            argument = new ScriptArgumentData
+            {
+                Offset = offset,
+                Type = ArgumentType.Value,
+                Data = buffer
+            };
+        }
+        else if (instruction.Arguments[argumentIndex] is ScriptArgumentVariable variable)
+        {
+            var buffer = new byte[6];
+            buffer[0] = 0x02;
+
+            BinaryPrimitives.WriteInt32LittleEndian(buffer.AsSpan(1), variable.Value);
 
             argument = new ScriptArgumentData
             {
@@ -129,13 +143,13 @@ internal abstract class ScriptInstructionComposer : IScriptInstructionComposer
             throw new InvalidOperationException($"Instruction {instruction.Instruction} requires a data or variable argument at position {argumentIndex}.");
 
         ScriptArgumentData argument;
-        if (instruction.Arguments[argumentIndex] is ScriptArgumentBytes bytes)
+        if (instruction.Arguments[argumentIndex] is ScriptArgumentExpression expression)
         {
             argument = new ScriptArgumentData
             {
                 Offset = offset,
-                Type = ArgumentType.Variable,
-                Data = bytes.Data
+                Type = ArgumentType.Value,
+                Data = ComposeExpressionData(expression)
             };
         }
         else if (instruction.Arguments[argumentIndex] is ScriptArgumentVariable variable)
@@ -174,5 +188,40 @@ internal abstract class ScriptInstructionComposer : IScriptInstructionComposer
         });
 
         offset += data.Length;
+    }
+
+    private static byte[] ComposeExpressionData(ScriptArgumentExpression expression)
+    {
+        int length = CalculateExpression(expression);
+        var data = new byte[length];
+
+        int offset = 0;
+        foreach (var operation in expression.Operations)
+        {
+            data[offset++] = (byte)operation.Operation;
+
+            if (operation.Operation is Operation.LoadInt or Operation.LoadVariable)
+            {
+                BinaryPrimitives.WriteInt32LittleEndian(data.AsSpan(offset), operation.Value);
+                offset += 4;
+            }
+        }
+
+        return data;
+    }
+
+    private static int CalculateExpression(ScriptArgumentExpression expression)
+    {
+        var length = 1;
+
+        foreach (var operation in expression.Operations)
+        {
+            if (operation.Operation is Operation.LoadInt or Operation.LoadVariable)
+                length += 4;
+
+            length++;
+        }
+
+        return length;
     }
 }

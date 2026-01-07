@@ -38,6 +38,60 @@ internal class PandoraScriptLexer : ILexer<PandoraSyntaxToken>
                 return new PandoraSyntaxToken(SyntaxTokenKind.Colon, Position, Line, Column, $"{ReadChar()}");
             case ';':
                 return new PandoraSyntaxToken(SyntaxTokenKind.Semicolon, Position, Line, Column, $"{ReadChar()}");
+            case '*':
+                return new PandoraSyntaxToken(SyntaxTokenKind.Asterisk, Position, Line, Column, $"{ReadChar()}");
+            case '%':
+                return new PandoraSyntaxToken(SyntaxTokenKind.Percent, Position, Line, Column, $"{ReadChar()}");
+            case '+':
+                return new PandoraSyntaxToken(SyntaxTokenKind.Plus, Position, Line, Column, $"{ReadChar()}");
+            case '&':
+                return new PandoraSyntaxToken(SyntaxTokenKind.Ampersand, Position, Line, Column, $"{ReadChar()}");
+            case '|':
+                return new PandoraSyntaxToken(SyntaxTokenKind.Pipe, Position, Line, Column, $"{ReadChar()}");
+            case '^':
+                return new PandoraSyntaxToken(SyntaxTokenKind.Caret, Position, Line, Column, $"{ReadChar()}");
+
+            case '<':
+                if (IsPeekedChar(1, '='))
+                    return new PandoraSyntaxToken(SyntaxTokenKind.SmallerEquals, Position, Line, Column, $"{ReadChar()}{ReadChar()}");
+
+                if (IsPeekedChar(1, '<'))
+                    return new PandoraSyntaxToken(SyntaxTokenKind.ShiftLeft, Position, Line, Column, $"{ReadChar()}{ReadChar()}");
+
+                return new PandoraSyntaxToken(SyntaxTokenKind.SmallerThan, Position, Line, Column, $"{ReadChar()}");
+
+            case '>':
+                if (IsPeekedChar(1, '='))
+                    return new PandoraSyntaxToken(SyntaxTokenKind.GreaterEquals, Position, Line, Column, $"{ReadChar()}{ReadChar()}");
+
+                if (IsPeekedChar(1, '>'))
+                    return new PandoraSyntaxToken(SyntaxTokenKind.ShiftRight, Position, Line, Column, $"{ReadChar()}{ReadChar()}");
+
+                return new PandoraSyntaxToken(SyntaxTokenKind.GreaterThan, Position, Line, Column, $"{ReadChar()}");
+
+            case '!':
+                if (!IsPeekedChar(1, '='))
+                    break;
+
+                return new PandoraSyntaxToken(SyntaxTokenKind.NotEquals, Position, Line, Column, $"{ReadChar()}{ReadChar()}");
+
+            case '=':
+                if (!IsPeekedChar(1, '='))
+                    break;
+
+                return new PandoraSyntaxToken(SyntaxTokenKind.EqualsEquals, Position, Line, Column, $"{ReadChar()}{ReadChar()}");
+
+            case '-':
+                if (TryPeekChar(1, out char newChar) && newChar is >= '0' and <= '9')
+                    goto case '0';
+
+                return new PandoraSyntaxToken(SyntaxTokenKind.Minus, Position, Line, Column, $"{ReadChar()}");
+
+            case '/':
+                if (IsPeekedChar(1, '/') || IsPeekedChar(1, '*'))
+                    goto case ' ';
+
+                return new PandoraSyntaxToken(SyntaxTokenKind.Slash, Position, Line, Column, $"{ReadChar()}");
 
             case '(':
                 return new PandoraSyntaxToken(SyntaxTokenKind.ParenOpen, Position, Line, Column, $"{ReadChar()}");
@@ -64,7 +118,6 @@ internal class PandoraScriptLexer : ILexer<PandoraSyntaxToken>
             case '\'':
                 return ReadDataLiteral();
 
-            case '-':
             case '0':
             case '1':
             case '2':
@@ -399,6 +452,12 @@ internal class PandoraScriptLexer : ILexer<PandoraSyntaxToken>
         {
             case "vars":
                 return new PandoraSyntaxToken(SyntaxTokenKind.VarsKeyword, position, line, column, finalValue);
+
+            case "and":
+                return new PandoraSyntaxToken(SyntaxTokenKind.AndKeyword, position, line, column, finalValue);
+
+            case "or":
+                return new PandoraSyntaxToken(SyntaxTokenKind.OrKeyword, position, line, column, finalValue);
 
             default:
                 return new PandoraSyntaxToken(SyntaxTokenKind.Identifier, position, line, column, finalValue);

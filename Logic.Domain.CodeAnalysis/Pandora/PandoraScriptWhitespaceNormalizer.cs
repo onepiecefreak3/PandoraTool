@@ -152,17 +152,25 @@ internal class PandoraScriptWhitespaceNormalizer : IPandoraScriptWhitespaceNorma
             return;
 
         foreach (ExpressionSyntax value in valueList.Elements)
-        {
-            ctx.IsFirstElement = valueList.Elements[0] == value;
-
             NormalizeExpression(value, ctx);
-        }
     }
 
     private void NormalizeExpression(ExpressionSyntax expression, WhitespaceNormalizeContext ctx)
     {
         switch (expression)
         {
+            case ParenthesizedExpressionSyntax parens:
+                NormalizeParenthesizedExpression(parens, ctx);
+                break;
+
+            case BinaryExpressionSyntax binary:
+                NormalizeBinaryExpression(binary, ctx);
+                break;
+
+            case LogicalExpressionSyntax logical:
+                NormalizeLogicalExpression(logical, ctx);
+                break;
+
             case LiteralExpressionSyntax literalExpression:
                 NormalizeLiteralExpression(literalExpression, ctx);
                 break;
@@ -173,6 +181,37 @@ internal class PandoraScriptWhitespaceNormalizer : IPandoraScriptWhitespaceNorma
         }
     }
 
+    private void NormalizeParenthesizedExpression(ParenthesizedExpressionSyntax parens, WhitespaceNormalizeContext ctx)
+    {
+        SyntaxToken parenOpen = parens.ParenOpen.WithNoTrivia();
+        SyntaxToken parenClose = parens.ParenClose.WithNoTrivia();
+
+        parens.SetParenOpen(parenOpen, false);
+        parens.SetParenClose(parenClose, false);
+
+        NormalizeExpression(parens.Expression, ctx);
+    }
+
+    private void NormalizeBinaryExpression(BinaryExpressionSyntax binary, WhitespaceNormalizeContext ctx)
+    {
+        SyntaxToken operation = binary.Operation.WithLeadingTrivia(" ").WithTrailingTrivia(" ");
+
+        binary.SetOperation(operation, false);
+
+        NormalizeExpression(binary.Left, ctx);
+        NormalizeExpression(binary.Right, ctx);
+    }
+
+    private void NormalizeLogicalExpression(LogicalExpressionSyntax logical, WhitespaceNormalizeContext ctx)
+    {
+        SyntaxToken operation = logical.Operation.WithLeadingTrivia(" ").WithTrailingTrivia(" ");
+
+        logical.SetOperation(operation, false);
+
+        NormalizeExpression(logical.Left, ctx);
+        NormalizeExpression(logical.Right, ctx);
+    }
+
     private void NormalizeLiteralExpression(LiteralExpressionSyntax literal, WhitespaceNormalizeContext ctx)
     {
         SyntaxToken literalToken = literal.Literal.WithNoTrivia();
@@ -180,10 +219,9 @@ internal class PandoraScriptWhitespaceNormalizer : IPandoraScriptWhitespaceNorma
         string? leadingTrivia = null;
         if (ctx is { ShouldIndent: true, Indent: > 0 })
             leadingTrivia = new string('\t', ctx.Indent);
-        if (!ctx.IsFirstElement)
-            leadingTrivia += " ";
 
         literalToken = literalToken.WithLeadingTrivia(leadingTrivia);
+
         if (ctx.ShouldLineBreak)
             literalToken = literalToken.WithTrailingTrivia("\r\n");
 
@@ -199,8 +237,6 @@ internal class PandoraScriptWhitespaceNormalizer : IPandoraScriptWhitespaceNorma
         string? leadingTrivia = null;
         if (ctx is { ShouldIndent: true, Indent: > 0 })
             leadingTrivia = new string('\t', ctx.Indent);
-        if (!ctx.IsFirstElement)
-            leadingTrivia += " ";
 
         varsKeyword = varsKeyword.WithLeadingTrivia(leadingTrivia);
         if (ctx.ShouldLineBreak)
