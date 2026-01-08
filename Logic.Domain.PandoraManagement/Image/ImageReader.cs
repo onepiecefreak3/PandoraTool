@@ -7,16 +7,21 @@ namespace Logic.Domain.PandoraManagement.Image;
 
 internal class ImageReader : IImageReader
 {
-    public ImageData Read(byte[] data)
+    public ImageCompression ReadCompression(byte[] data)
     {
         int compressionFormat = BinaryPrimitives.ReadInt32LittleEndian(data);
 
+        return compressionFormat is 2 ? ImageCompression.Pixel : ImageCompression.Lzss01;
+    }
+
+    public ImageData Read(byte[] data)
+    {
         int width = BinaryPrimitives.ReadInt32LittleEndian(data.AsSpan(0x10));
         int height = BinaryPrimitives.ReadInt32LittleEndian(data.AsSpan(0x14));
 
         return new ImageData
         {
-            CompressionType = compressionFormat is 2 ? ImageCompression.Pixel : ImageCompression.Lzss01,
+            CompressionType = ReadCompression(data),
             Width = width,
             Height = height,
             Data = data[0x18..]

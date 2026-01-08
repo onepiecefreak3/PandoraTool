@@ -86,36 +86,10 @@ internal class ImageCompressorPixel : IImageCompressorPixel
         Bgr24 topLeftPixel = image[x - 1, y - 1];
         Bgr24 topPixel = image[x, y - 1];
 
-        if (pixel == leftPixel)
-        {
-            writer.WriteBits(0xC, 4);
-            return;
-        }
-
-        if (pixel == topLeftPixel)
-        {
-            writer.WriteBits(0, 6);
-            return;
-        }
-
-        if (pixel == topPixel)
-        {
-            writer.WriteBits(0x20, 6);
-            return;
-        }
-
-        if (leftPixel.B - topLeftPixel.B + topPixel.B == pixel.B &&
-            leftPixel.G - topLeftPixel.G + topPixel.G == pixel.G &&
-            leftPixel.R - topLeftPixel.R + topPixel.R == pixel.R)
-        {
-            writer.WriteBits(2, 2);
-            return;
-        }
-
-        var bMinDiff = 24;
-        var gMinDiff = 24;
-        var rMinDiff = 24;
-        var minDiffLength = 24;
+        var bMinDiff = 0;
+        var gMinDiff = 0;
+        var rMinDiff = 0;
+        var minDiffLength = 28;
         var mode = 0;
         var modeLength = 0;
 
@@ -130,12 +104,12 @@ internal class ImageCompressorPixel : IImageCompressorPixel
             int gLength = GetColorChannelDeltaLength(gDiff);
             int rLength = GetColorChannelDeltaLength(rDiff);
 
-            if (bLength + gLength + rLength < minDiffLength)
+            if (bLength + gLength + rLength + 4 < minDiffLength)
             {
                 bMinDiff = bDiff;
                 gMinDiff = gDiff;
                 rMinDiff = rDiff;
-                minDiffLength = bLength + gLength + rLength;
+                minDiffLength = bLength + gLength + rLength + 4;
                 mode = 4;
                 modeLength = 4;
             }
@@ -152,12 +126,12 @@ internal class ImageCompressorPixel : IImageCompressorPixel
             int gLength = GetColorChannelDeltaLength(gDiff);
             int rLength = GetColorChannelDeltaLength(rDiff);
 
-            if (bLength + gLength + rLength < minDiffLength)
+            if (bLength + gLength + rLength + 6 < minDiffLength)
             {
                 bMinDiff = bDiff;
                 gMinDiff = gDiff;
                 rMinDiff = rDiff;
-                minDiffLength = bLength + gLength + rLength;
+                minDiffLength = bLength + gLength + rLength + 6;
                 mode = 0x30;
                 modeLength = 6;
             }
@@ -174,12 +148,12 @@ internal class ImageCompressorPixel : IImageCompressorPixel
             int gLength = GetColorChannelDeltaLength(gDiff);
             int rLength = GetColorChannelDeltaLength(rDiff);
 
-            if (bLength + gLength + rLength < minDiffLength)
+            if (bLength + gLength + rLength + 6 < minDiffLength)
             {
                 bMinDiff = bDiff;
                 gMinDiff = gDiff;
                 rMinDiff = rDiff;
-                minDiffLength = bLength + gLength + rLength;
+                minDiffLength = bLength + gLength + rLength + 6;
                 mode = 0x10;
                 modeLength = 6;
             }
@@ -196,18 +170,45 @@ internal class ImageCompressorPixel : IImageCompressorPixel
             int gLength = GetColorChannelDeltaLength(gDiff);
             int rLength = GetColorChannelDeltaLength(rDiff);
 
-            if (bLength + gLength + rLength < minDiffLength)
+            if (bLength + gLength + rLength + 1 < minDiffLength)
             {
                 bMinDiff = bDiff;
                 gMinDiff = gDiff;
                 rMinDiff = rDiff;
-                minDiffLength = bLength + gLength + rLength;
+                minDiffLength = bLength + gLength + rLength + 1;
                 mode = 1;
                 modeLength = 1;
             }
         }
 
-        if (minDiffLength < 24)
+        if (minDiffLength > 2 &&
+            leftPixel.B - topLeftPixel.B + topPixel.B == pixel.B &&
+            leftPixel.G - topLeftPixel.G + topPixel.G == pixel.G &&
+            leftPixel.R - topLeftPixel.R + topPixel.R == pixel.R)
+        {
+            writer.WriteBits(2, 2);
+            return;
+        }
+
+        if (minDiffLength > 4 && pixel == leftPixel)
+        {
+            writer.WriteBits(0xC, 4);
+            return;
+        }
+
+        if (minDiffLength > 6 && pixel == topLeftPixel)
+        {
+            writer.WriteBits(0, 6);
+            return;
+        }
+
+        if (minDiffLength > 6 && pixel == topPixel)
+        {
+            writer.WriteBits(0x20, 6);
+            return;
+        }
+
+        if (minDiffLength < 28)
         {
             writer.WriteBits(mode, modeLength);
             WriteColorChannelDelta(writer, bMinDiff);
