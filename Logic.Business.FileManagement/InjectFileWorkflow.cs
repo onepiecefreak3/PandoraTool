@@ -108,10 +108,6 @@ internal class InjectFileWorkflow(
                     break;
 
                 case FileType.Sound:
-                    newFileStream = File.OpenRead(filePath);
-                    file.Compression = FileCompression.Lzss01;
-                    break;
-
                 default:
                     continue;
             }
