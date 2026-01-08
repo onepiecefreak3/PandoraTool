@@ -5,9 +5,13 @@ using Logic.Domain.CodeAnalysis.Contract.DataClasses.Pandora;
 using Logic.Domain.CodeAnalysis.Contract.Pandora;
 using Logic.Domain.PandoraManagement.Contract.Archive;
 using Logic.Domain.PandoraManagement.Contract.DataClasses.Archive;
+using Logic.Domain.PandoraManagement.Contract.DataClasses.Image;
 using Logic.Domain.PandoraManagement.Contract.DataClasses.Script;
 using Logic.Domain.PandoraManagement.Contract.Enums;
+using Logic.Domain.PandoraManagement.Contract.Image;
 using Logic.Domain.PandoraManagement.Contract.Script;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Logic.Business.FileManagement;
 
@@ -16,9 +20,12 @@ internal class InjectFileWorkflow(
     IInputFileProvider pathProvider,
     IArchiveParser archiveParser,
     IArchiveComposer archiveComposer,
+    IImageComposer imageComposer,
+    IImageReader imageReader,
     IScriptComposer scriptComposer,
     IPandoraCodeUnitConverter codeUnitConverter,
     IPandoraScriptParser scriptParser,
+    IFileDecompressor fileDecompressor,
     IFileCompressor fileCompressor) : IInjectFileWorkflow
 {
     public void Inject()
@@ -69,6 +76,7 @@ internal class InjectFileWorkflow(
             if (!File.Exists(filePath))
                 continue;
 
+            Stream newFileStream;
             switch (file.Type)
             {
                 case FileType.Script:
@@ -77,14 +85,33 @@ internal class InjectFileWorkflow(
 
                     byte[] scriptData = scriptComposer.Compose(instructions);
 
-                    file.Data = fileCompressor.Compress(new MemoryStream(scriptData), file.Compression);
+                    newFileStream = new MemoryStream(scriptData);
                     break;
 
                 case FileType.Image:
-                case FileType.Sound:
-                case FileType.Binary:
+                    byte[] fileData = fileDecompressor.DecompressBytes(file.Data, file.Compression);
+                    ImageData imageData = imageReader.Read(fileData);
+
+                    var imageFile = new ImageFile
+                    {
+                        CompressionType = imageData.CompressionType,
+                        Image = Image.Load<Bgr24>(filePath)
+                    };
+
+                    newFileStream = new MemoryStream();
+                    imageComposer.Compose(imageFile, newFileStream);
                     break;
+
+                case FileType.Binary:
+                    newFileStream = File.OpenRead(filePath);
+                    break;
+
+                case FileType.Sound:
+                default:
+                    continue;
             }
+
+            file.Data = fileCompressor.CompressStream(newFileStream, file.Compression);
         }
 
         Console.WriteLine($"Inject files {files.Length}/{files.Length}... Ok");

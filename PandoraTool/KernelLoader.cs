@@ -3,9 +3,9 @@ using CrossCutting.Core.Contract.Bootstrapping;
 using CrossCutting.Core.Contract.Configuration;
 using CrossCutting.Core.Contract.DependencyInjection;
 using CrossCutting.Core.Contract.EventBrokerage;
-using Mappings.PandorasProcessor;
+using Mappings.PandoraTool;
 
-namespace PandorasProcessor;
+namespace PandoraTool;
 
 internal class KernelLoader
 {

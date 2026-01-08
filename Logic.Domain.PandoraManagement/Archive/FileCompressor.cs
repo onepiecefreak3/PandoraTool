@@ -7,7 +7,7 @@ namespace Logic.Domain.PandoraManagement.Archive;
 
 internal class FileCompressor : IFileCompressor
 {
-    public Stream Compress(Stream stream, FileCompression fileCompression)
+    public Stream CompressStream(Stream stream, FileCompression fileCompression)
     {
         stream.Position = 0;
 
@@ -30,5 +30,16 @@ internal class FileCompressor : IFileCompressor
             default:
                 throw new InvalidOperationException($"Unknown file compression {fileCompression}.");
         }
+    }
+
+    public byte[] CompressBytes(Stream stream, FileCompression fileCompression)
+    {
+        Stream compressedStream = CompressStream(stream, fileCompression);
+
+        if (compressedStream is MemoryStream memoryStream)
+            return memoryStream.ToArray();
+
+        using var reader = new BinaryReader(compressedStream);
+        return reader.ReadBytes((int)compressedStream.Length);
     }
 }

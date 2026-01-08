@@ -2,7 +2,7 @@
 
 namespace Logic.Domain.PandoraManagement.Contract.Image;
 
-public interface IImageParser
+public interface IImageReader
 {
-    ImageFile Parse(byte[] data);
+    ImageData Read(byte[] data);
 }

@@ -2,7 +2,7 @@
 
 namespace Logic.Domain.PandoraManagement.Contract.Image;
 
-public interface IImageParser
+public interface IImageComposer
 {
-    ImageFile Parse(byte[] data);
+    void Compose(ImageFile file, Stream output);
 }

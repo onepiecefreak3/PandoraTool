@@ -20,7 +20,7 @@ using Logic.Business.FileManagement;
 using Logic.Domain.CodeAnalysis;
 using Logic.Domain.PandoraManagement;
 
-namespace Mappings.PandorasProcessor;
+namespace Mappings.PandoraTool;
 
 public class KernelInitializer : IKernelInitializer
 {

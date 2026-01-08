@@ -4,5 +4,6 @@ namespace Logic.Domain.PandoraManagement.Contract.Archive;
 
 public interface IFileCompressor
 {
-    Stream Compress(Stream stream, FileCompression fileCompression);
+    Stream CompressStream(Stream stream, FileCompression fileCompression);
+    byte[] CompressBytes(Stream stream, FileCompression fileCompression);
 }

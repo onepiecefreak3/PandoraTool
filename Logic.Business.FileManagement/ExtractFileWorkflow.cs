@@ -5,13 +5,13 @@ using Logic.Domain.CodeAnalysis.Contract.DataClasses.Pandora;
 using Logic.Domain.CodeAnalysis.Contract.Pandora;
 using Logic.Domain.PandoraManagement.Contract.Archive;
 using Logic.Domain.PandoraManagement.Contract.DataClasses.Archive;
+using Logic.Domain.PandoraManagement.Contract.DataClasses.Image;
 using Logic.Domain.PandoraManagement.Contract.DataClasses.Script;
 using Logic.Domain.PandoraManagement.Contract.Enums;
 using Logic.Domain.PandoraManagement.Contract.Image;
 using Logic.Domain.PandoraManagement.Contract.Script;
 using Logic.Domain.PandoraManagement.Contract.Sound;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 
 namespace Logic.Business.FileManagement;
 
@@ -47,9 +47,10 @@ internal class ExtractFileWorkflow(
 
         for (var i = 0; i < files.Length; i++)
         {
+            ArchiveFile file = files[i];
+
             Console.Write($"Extracted files {i}/{files.Length}...\r");
 
-            ArchiveFile file = files[i];
             byte[] fileData = fileDecompressor.DecompressBytes(file.Data, file.Compression);
 
             string newFilePath = Path.Combine(outputDirectory, file.Name);
@@ -59,8 +60,8 @@ internal class ExtractFileWorkflow(
                 case FileType.Image:
                     newFilePath = Path.ChangeExtension(newFilePath, ".png");
 
-                    Image<Rgb24> image = imageParser.Parse(fileData);
-                    image.SaveAsPng(newFilePath);
+                    ImageFile image = imageParser.Parse(fileData);
+                    image.Image.SaveAsPng(newFilePath);
                     break;
 
                 case FileType.Sound:

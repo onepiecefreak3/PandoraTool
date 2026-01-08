@@ -3,7 +3,7 @@ using CrossCutting.Core.Contract.EventBrokerage;
 using CrossCutting.Core.Contract.Messages;
 using Logic.Business.FileManagement.Contract;
 using System.Text;
-using PandorasProcessor;
+using PandoraTool;
 
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 

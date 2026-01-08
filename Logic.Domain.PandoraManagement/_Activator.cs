@@ -9,6 +9,8 @@ using Logic.Domain.PandoraManagement.Contract.Image;
 using Logic.Domain.PandoraManagement.Contract.Script;
 using Logic.Domain.PandoraManagement.Contract.Sound;
 using Logic.Domain.PandoraManagement.Image;
+using Logic.Domain.PandoraManagement.Image.Compression;
+using Logic.Domain.PandoraManagement.InternalContract.Image;
 using Logic.Domain.PandoraManagement.Script;
 using Logic.Domain.PandoraManagement.Sound;
 
@@ -44,11 +46,20 @@ public class PandoraManagementActivator : IComponentActivator
         kernel.Register<IFileDecompressor, FileDecompressor>(ActivationScope.Unique);
         kernel.Register<IFileCompressor, FileCompressor>(ActivationScope.Unique);
 
+        kernel.Register<IImageDecompressorFactory, ImageDecompressorFactory>(ActivationScope.Unique);
+        kernel.Register<IImageDecompressorPixel, ImageDecompressorPixel>(ActivationScope.Unique);
+        kernel.Register<IImageDecompressorLzss01, ImageDecompressorLzss01>(ActivationScope.Unique);
+        kernel.Register<IImageCompressorFactory, ImageCompressorFactory>(ActivationScope.Unique);
+        kernel.Register<IImageCompressorPixel, ImageCompressorPixel>(ActivationScope.Unique);
+        kernel.Register<IImageCompressorLzss01, ImageCompressorLzss01>(ActivationScope.Unique);
+        kernel.Register<IImageReader, ImageReader>(ActivationScope.Unique);
         kernel.Register<IImageParser, ImageParser>(ActivationScope.Unique);
+        kernel.Register<IImageWriter, ImageWriter>(ActivationScope.Unique);
+        kernel.Register<IImageComposer, ImageComposer>(ActivationScope.Unique);
 
         kernel.Register<ISoundParser, SoundParser>(ActivationScope.Unique);
 
-        kernel.Register<IScriptReader , ScriptReader>(ActivationScope.Unique);
+        kernel.Register<IScriptReader, ScriptReader>(ActivationScope.Unique);
         kernel.Register<IScriptParser, ScriptParser>(ActivationScope.Unique);
         kernel.Register<IScriptWriter, ScriptWriter>(ActivationScope.Unique);
         kernel.Register<IScriptComposer, ScriptComposer>(ActivationScope.Unique);
