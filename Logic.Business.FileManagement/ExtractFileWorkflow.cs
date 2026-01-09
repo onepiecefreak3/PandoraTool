@@ -50,9 +50,6 @@ internal class ExtractFileWorkflow(
         {
             ArchiveFile file = files[i];
 
-            if (!file.Name.StartsWith("NF_TITL"))
-                continue;
-
             Console.Write($"Extracted files {i}/{files.Length}...\r");
 
             byte[] fileData = fileDecompressor.DecompressBytes(file.Data, file.Compression);
