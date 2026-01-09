@@ -2,7 +2,7 @@
   "profiles": {
     "PandorasProcessor": {
       "commandName": "Project",
-      "commandLineArgs": "-o e -f E:\\reverse_engineering\\Nanako2\\files\\NFWIN.DAT"
+      "commandLineArgs": "-o i -f E:\\reverse_engineering\\Nanako2\\files\\NFWIN.DAT -fi E:\\reverse_engineering\\Nanako2\\files\\changed"
     },
     "Profil \"1\"": {
       "commandName": "Project",

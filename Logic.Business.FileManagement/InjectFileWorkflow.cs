@@ -9,7 +9,6 @@ using Logic.Domain.PandoraManagement.Contract.DataClasses.Image;
 using Logic.Domain.PandoraManagement.Contract.DataClasses.Script;
 using Logic.Domain.PandoraManagement.Contract.DataClasses.Sound;
 using Logic.Domain.PandoraManagement.Contract.Enums;
-using Logic.Domain.PandoraManagement.Contract.Enums.Image;
 using Logic.Domain.PandoraManagement.Contract.Enums.Sound;
 using Logic.Domain.PandoraManagement.Contract.Image;
 using Logic.Domain.PandoraManagement.Contract.Script;
@@ -96,11 +95,13 @@ internal class InjectFileWorkflow(
 
                 case FileType.Image:
                     byte[] fileData = fileDecompressor.DecompressBytes(file.Data, file.Compression);
-                    ImageCompression compression = imageReader.ReadCompression(fileData);
+                    ImageMetaData metaData = imageReader.ReadMetaData(fileData);
 
                     var imageFile = new ImageFile
                     {
-                        Compression = compression,
+                        Compression = metaData.Compression,
+                        X = metaData.X,
+                        Y = metaData.Y,
                         Image = Image.Load<Bgr24>(filePath)
                     };
 

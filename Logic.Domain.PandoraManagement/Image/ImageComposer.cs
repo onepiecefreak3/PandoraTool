@@ -13,9 +13,14 @@ internal class ImageComposer(IImageWriter writer, IImageCompressorFactory compre
 
         var imageData = new ImageData
         {
-            CompressionType = file.Compression,
-            Width = file.Image.Width,
-            Height = file.Image.Height,
+            MetaData = new ImageMetaData
+            {
+                Compression = file.Compression,
+                X = file.X,
+                Y = file.Y,
+                Width = file.Image.Width,
+                Height = file.Image.Height
+            },
             Data = data
         };
 

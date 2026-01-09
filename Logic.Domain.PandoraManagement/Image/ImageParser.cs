@@ -11,13 +11,15 @@ internal class ImageParser(IImageReader reader, IImageDecompressorFactory decomp
     public ImageFile Parse(byte[] data)
     {
         ImageData imageData = reader.Read(data);
-        IImageDecompressor decompressor = decompressorFactory.Get(imageData.CompressionType);
+        IImageDecompressor decompressor = decompressorFactory.Get(imageData.MetaData.Compression);
 
-        Image<Bgr24> image = decompressor.Decompress(imageData.Data, imageData.Width, imageData.Height);
+        Image<Bgr24> image = decompressor.Decompress(imageData.Data, imageData.MetaData.Width, imageData.MetaData.Height);
 
         return new ImageFile
         {
-            Compression = imageData.CompressionType,
+            Compression = imageData.MetaData.Compression,
+            X = imageData.MetaData.X,
+            Y = imageData.MetaData.Y,
             Image = image
         };
     }

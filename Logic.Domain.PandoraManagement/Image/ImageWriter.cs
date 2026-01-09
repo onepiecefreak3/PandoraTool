@@ -11,12 +11,12 @@ internal class ImageWriter : IImageWriter
     {
         using var writer = new BinaryWriterX(output, true);
 
-        writer.Write(data.CompressionType is ImageCompression.Pixel ? 2 : 0);
+        writer.Write(data.MetaData.Compression is ImageCompression.Pixel ? 2 : 0);
         writer.Write(-1);
-
-        output.Position += 8;
-        writer.Write(data.Width);
-        writer.Write(data.Height);
+        writer.Write(data.MetaData.X);
+        writer.Write(data.MetaData.Y);
+        writer.Write(data.MetaData.Width);
+        writer.Write(data.MetaData.Height);
         writer.Write(data.Data);
 
         output.Position = 0;
