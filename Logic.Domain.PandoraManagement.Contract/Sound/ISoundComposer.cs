@@ -2,7 +2,7 @@
 
 namespace Logic.Domain.PandoraManagement.Contract.Sound;
 
-public interface ISoundParser
+public interface ISoundComposer
 {
-    SoundFile Parse(byte[] data);
+    void Compose(SoundFile file, Stream output);
 }

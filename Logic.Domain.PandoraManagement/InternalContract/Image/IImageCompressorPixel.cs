@@ -1,4 +1,4 @@
-﻿using Logic.Domain.PandoraManagement.Contract.Image;
+﻿using Logic.Domain.PandoraManagement.Contract.Image.Compression;
 
 namespace Logic.Domain.PandoraManagement.InternalContract.Image;
 

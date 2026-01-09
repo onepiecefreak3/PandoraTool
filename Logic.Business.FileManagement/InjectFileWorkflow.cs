@@ -7,10 +7,13 @@ using Logic.Domain.PandoraManagement.Contract.Archive;
 using Logic.Domain.PandoraManagement.Contract.DataClasses.Archive;
 using Logic.Domain.PandoraManagement.Contract.DataClasses.Image;
 using Logic.Domain.PandoraManagement.Contract.DataClasses.Script;
+using Logic.Domain.PandoraManagement.Contract.DataClasses.Sound;
 using Logic.Domain.PandoraManagement.Contract.Enums;
 using Logic.Domain.PandoraManagement.Contract.Enums.Image;
+using Logic.Domain.PandoraManagement.Contract.Enums.Sound;
 using Logic.Domain.PandoraManagement.Contract.Image;
 using Logic.Domain.PandoraManagement.Contract.Script;
+using Logic.Domain.PandoraManagement.Contract.Sound;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
@@ -23,6 +26,8 @@ internal class InjectFileWorkflow(
     IArchiveComposer archiveComposer,
     IImageComposer imageComposer,
     IImageReader imageReader,
+    ISoundComposer soundComposer,
+    ISoundReader soundReader,
     IScriptComposer scriptComposer,
     IPandoraCodeUnitConverter codeUnitConverter,
     IPandoraScriptParser scriptParser,
@@ -95,7 +100,7 @@ internal class InjectFileWorkflow(
 
                     var imageFile = new ImageFile
                     {
-                        CompressionType = compression,
+                        Compression = compression,
                         Image = Image.Load<Bgr24>(filePath)
                     };
 
@@ -103,11 +108,24 @@ internal class InjectFileWorkflow(
                     imageComposer.Compose(imageFile, newFileStream);
                     break;
 
+                case FileType.Sound:
+                    byte[] fileData1 = fileDecompressor.DecompressBytes(file.Data, file.Compression);
+                    SoundCompression compression1 = soundReader.ReadCompression(fileData1);
+
+                    var soundFile = new SoundFile
+                    {
+                        Compression = compression1,
+                        Data = File.ReadAllBytes(filePath)
+                    };
+
+                    newFileStream = new MemoryStream();
+                    soundComposer.Compose(soundFile, newFileStream);
+                    break;
+
                 case FileType.Binary:
                     newFileStream = File.OpenRead(filePath);
                     break;
 
-                case FileType.Sound:
                 default:
                     continue;
             }

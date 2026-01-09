@@ -4,7 +4,7 @@ namespace Logic.Domain.PandoraManagement.Contract.DataClasses.Archive;
 
 public class ArchiveFile
 {
-    public required FileCompression Compression { get; set; }
+    public required FileCompression Compression { get; init; }
     public required FileType Type { get; init; }
     public required string Name { get; init; }
     public required Stream Data { get; set; }

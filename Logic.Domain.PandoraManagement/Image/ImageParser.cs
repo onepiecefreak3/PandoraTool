@@ -1,5 +1,6 @@
 ﻿using Logic.Domain.PandoraManagement.Contract.DataClasses.Image;
 using Logic.Domain.PandoraManagement.Contract.Image;
+using Logic.Domain.PandoraManagement.Contract.Image.Compression;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
@@ -16,7 +17,7 @@ internal class ImageParser(IImageReader reader, IImageDecompressorFactory decomp
 
         return new ImageFile
         {
-            CompressionType = imageData.CompressionType,
+            Compression = imageData.CompressionType,
             Image = image
         };
     }

@@ -6,6 +6,6 @@ namespace Logic.Domain.PandoraManagement.Contract.DataClasses.Image;
 
 public class ImageFile
 {
-    public required ImageCompression CompressionType { get; init; }
+    public required ImageCompression Compression { get; init; }
     public required Image<Bgr24> Image { get; init; }
 }

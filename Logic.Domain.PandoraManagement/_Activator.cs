@@ -6,13 +6,17 @@ using CrossCutting.Core.Contract.EventBrokerage;
 using Logic.Domain.PandoraManagement.Archive;
 using Logic.Domain.PandoraManagement.Contract.Archive;
 using Logic.Domain.PandoraManagement.Contract.Image;
+using Logic.Domain.PandoraManagement.Contract.Image.Compression;
 using Logic.Domain.PandoraManagement.Contract.Script;
 using Logic.Domain.PandoraManagement.Contract.Sound;
+using Logic.Domain.PandoraManagement.Contract.Sound.Compression;
 using Logic.Domain.PandoraManagement.Image;
 using Logic.Domain.PandoraManagement.Image.Compression;
 using Logic.Domain.PandoraManagement.InternalContract.Image;
+using Logic.Domain.PandoraManagement.InternalContract.Sound;
 using Logic.Domain.PandoraManagement.Script;
 using Logic.Domain.PandoraManagement.Sound;
+using Logic.Domain.PandoraManagement.Sound.Compression;
 
 namespace Logic.Domain.PandoraManagement;
 
@@ -57,7 +61,16 @@ public class PandoraManagementActivator : IComponentActivator
         kernel.Register<IImageWriter, ImageWriter>(ActivationScope.Unique);
         kernel.Register<IImageComposer, ImageComposer>(ActivationScope.Unique);
 
+        kernel.Register<ISoundDecompressorFactory, SoundDecompressorFactory>(ActivationScope.Unique);
+        kernel.Register<ISoundDecompressor8, SoundDecompressor8>(ActivationScope.Unique);
+        kernel.Register<ISoundDecompressor12, SoundDecompressor12>(ActivationScope.Unique);
+        kernel.Register<ISoundCompressorFactory, SoundCompressorFactory>(ActivationScope.Unique);
+        kernel.Register<ISoundCompressor8, SoundCompressor8>(ActivationScope.Unique);
+        kernel.Register<ISoundCompressor12, SoundCompressor12>(ActivationScope.Unique);
+        kernel.Register<ISoundReader, SoundReader>(ActivationScope.Unique);
         kernel.Register<ISoundParser, SoundParser>(ActivationScope.Unique);
+        kernel.Register<ISoundWriter, SoundWriter>(ActivationScope.Unique);
+        kernel.Register<ISoundComposer, SoundComposer>(ActivationScope.Unique);
 
         kernel.Register<IScriptReader, ScriptReader>(ActivationScope.Unique);
         kernel.Register<IScriptParser, ScriptParser>(ActivationScope.Unique);

@@ -7,6 +7,7 @@ using Logic.Domain.PandoraManagement.Contract.Archive;
 using Logic.Domain.PandoraManagement.Contract.DataClasses.Archive;
 using Logic.Domain.PandoraManagement.Contract.DataClasses.Image;
 using Logic.Domain.PandoraManagement.Contract.DataClasses.Script;
+using Logic.Domain.PandoraManagement.Contract.DataClasses.Sound;
 using Logic.Domain.PandoraManagement.Contract.Enums;
 using Logic.Domain.PandoraManagement.Contract.Image;
 using Logic.Domain.PandoraManagement.Contract.Script;
@@ -67,8 +68,8 @@ internal class ExtractFileWorkflow(
                 case FileType.Sound:
                     newFilePath = Path.ChangeExtension(newFilePath, ".wav");
 
-                    byte[] waveData = soundParser.Parse(fileData);
-                    File.WriteAllBytes(newFilePath, waveData);
+                    SoundFile soundFile = soundParser.Parse(fileData);
+                    File.WriteAllBytes(newFilePath, soundFile.Data);
                     break;
 
                 case FileType.Script:

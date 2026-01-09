@@ -1,5 +1,6 @@
 ﻿using Logic.Domain.PandoraManagement.Contract.DataClasses.Image;
 using Logic.Domain.PandoraManagement.Contract.Image;
+using Logic.Domain.PandoraManagement.Contract.Image.Compression;
 
 namespace Logic.Domain.PandoraManagement.Image;
 
@@ -7,12 +8,12 @@ internal class ImageComposer(IImageWriter writer, IImageCompressorFactory compre
 {
     public void Compose(ImageFile file, Stream output)
     {
-        IImageCompressor compressor = compressorFactory.Get(file.CompressionType);
+        IImageCompressor compressor = compressorFactory.Get(file.Compression);
         byte[] data = compressor.Compress(file.Image);
 
         var imageData = new ImageData
         {
-            CompressionType = file.CompressionType,
+            CompressionType = file.Compression,
             Width = file.Image.Width,
             Height = file.Image.Height,
             Data = data

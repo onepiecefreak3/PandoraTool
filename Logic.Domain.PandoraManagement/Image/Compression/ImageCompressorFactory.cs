@@ -1,6 +1,6 @@
 ﻿using CrossCutting.Core.Contract.DependencyInjection;
 using Logic.Domain.PandoraManagement.Contract.Enums.Image;
-using Logic.Domain.PandoraManagement.Contract.Image;
+using Logic.Domain.PandoraManagement.Contract.Image.Compression;
 using Logic.Domain.PandoraManagement.InternalContract.Image;
 
 namespace Logic.Domain.PandoraManagement.Image.Compression;
@@ -9,16 +9,11 @@ internal class ImageCompressorFactory(ICoCoKernel kernel) : IImageCompressorFact
 {
     public IImageCompressor Get(ImageCompression compression)
     {
-        switch (compression)
+        return compression switch
         {
-            case ImageCompression.Pixel:
-                return kernel.Get<IImageCompressorPixel>();
-
-            case ImageCompression.Lzss01:
-                return kernel.Get<IImageCompressorLzss01>();
-
-            default:
-                throw new InvalidOperationException($"Unknown image compression {compression}.");
-        }
+            ImageCompression.Pixel => kernel.Get<IImageCompressorPixel>(),
+            ImageCompression.Lzss01 => kernel.Get<IImageCompressorLzss01>(),
+            _ => throw new InvalidOperationException($"Unknown image compression {compression}.")
+        };
     }
 }
